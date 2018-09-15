@@ -29,6 +29,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
 	rootCmd.PersistentFlags().Bool("viper", true, "Use Viper for configuration")
 
+	listCmd.Flags().StringVarP(&listOpts.tagKey, "tagKey", "", "", "filters by tag key")
+	listCmd.Flags().StringVarP(&listOpts.tagValue, "tagValue", "", "", "filters by tag value")
+	listCmd.Flags().StringVarP(&listOpts.status, "status", "", "", "filters by tag value")
 }
 
 func initConfig() {
