@@ -11,29 +11,29 @@ import (
 
 var cfgFile string
 
-var rootCmd = &cobra.Command{
-	Use:   "gecco",
-	Short: "A Command Line Tool To Oprtate AWS EC2.",
-	Long:  "A Command Line Tool To Oprtate AWS EC2.",
+func newRootCmd() *cobra.Command {
+	rootCmd := &cobra.Command{
+		Use:   "gecco",
+		Short: "A Command Line Tool To Oprtate AWS EC2.",
+		Long:  "A Command Line Tool To Oprtate AWS EC2.",
+	}
+
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
+	rootCmd.PersistentFlags().Bool("viper", true, "Use Viper for configuration")
+
+	rootCmd.AddCommand(newListCmd())
+	rootCmd.AddCommand(newConnectCmd())
+
+	return rootCmd
 }
 
 // Execute command
 func Execute() {
+	rootCmd := newRootCmd()
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-}
-
-func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
-	rootCmd.PersistentFlags().Bool("viper", true, "Use Viper for configuration")
-
-	listCmd.Flags().StringVarP(&listOpts.TagKey, "tagKey", "", "", "filters by tag key")
-	listCmd.Flags().StringVarP(&listOpts.TagValue, "tagValue", "", "", "filters by tag value")
-	listCmd.Flags().StringVarP(&listOpts.Status, "status", "", "", "filters by tag value")
-
-	connectCmd.Flags().StringVarP(&connectOpts.Target, "target", "", "", "target instanceId to start session")
 }
 
 func initConfig() {
