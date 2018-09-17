@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -28,8 +29,30 @@ type ec2Instance struct {
 // Ec2Instances contains EC2 instance info
 type Ec2Instances []ec2Instance
 
+// Print instances
+func (instances Ec2Instances) Print(w io.Writer) {
+	for _, i := range instances {
+		var tag string
+		if len(i.tags) > 0 {
+			tag = "{ "
+			for _, t := range i.tags {
+				tag += t.key + ":" + t.value + " "
+			}
+			tag += "}"
+		}
+
+		fmt.Fprintln(w,
+			i.instanceID,
+			i.instanceType,
+			i.availabilityZone,
+			i.status,
+			tag,
+		)
+	}
+}
+
 // DescribeEC2 returns EC2 instance info
-func DescribeEC2(options config.ListOptions) (instances Ec2Instances, err error) {
+func DescribeEC2(options config.ListOption) (instances Ec2Instances, err error) {
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
@@ -55,7 +78,7 @@ func DescribeEC2(options config.ListOptions) (instances Ec2Instances, err error)
 	return instances, nil
 }
 
-func createInput(options config.ListOptions) ec2.DescribeInstancesInput {
+func createInput(options config.ListOption) ec2.DescribeInstancesInput {
 	filters := make([]*ec2.Filter, 0)
 
 	if options.Status != "" {
@@ -92,25 +115,6 @@ func createInput(options config.ListOptions) ec2.DescribeInstancesInput {
 	}
 }
 
-// Print instances
-func (instances Ec2Instances) Print() {
-	for _, i := range instances {
-		tag := "{ "
-		for _, t := range i.tags {
-			tag += t.key + ":" + t.value + " "
-		}
-		tag += "}"
-
-		fmt.Println(
-			i.instanceID,
-			i.instanceType,
-			i.availabilityZone,
-			i.status,
-			tag,
-		)
-	}
-}
-
 func newEc2Instance(i ec2.Instance) ec2Instance {
 	tags := make(tags, 0)
 	for _, t := range i.Tags {
@@ -118,12 +122,24 @@ func newEc2Instance(i ec2.Instance) ec2Instance {
 		tags = append(tags, tag)
 	}
 
+	var az string
+	p := i.Placement
+	if p != nil {
+		az = aws.StringValue(p.AvailabilityZone)
+	}
+
+	var status string
+	s := i.State
+	if s != nil {
+		status = aws.StringValue(s.Name)
+	}
+
 	return ec2Instance{
-		instanceID:       *i.InstanceId,
-		instanceType:     *i.InstanceType,
-		availabilityZone: *i.Placement.AvailabilityZone,
-		privateIPAdress:  *i.PrivateIpAddress,
-		status:           *i.State.Name,
+		instanceID:       aws.StringValue(i.InstanceId),
+		instanceType:     aws.StringValue(i.InstanceType),
+		availabilityZone: az,
+		privateIPAdress:  aws.StringValue(i.PrivateIpAddress),
+		status:           status,
 		tags:             tags,
 	}
 }
