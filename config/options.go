@@ -5,6 +5,11 @@ import (
 	"fmt"
 )
 
+// Config file
+type Config struct {
+	InteractiveFilterCommand string
+}
+
 // ListOption stores options for list command
 type ListOption struct {
 	TagKey   string
@@ -14,7 +19,8 @@ type ListOption struct {
 
 // ConnectOptions stores options for connect command
 type ConnectOptions struct {
-	Target string
+	Target      string
+	Interactive bool
 }
 
 // IsValid returns true if optons are valid

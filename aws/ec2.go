@@ -26,6 +26,14 @@ type ec2Instance struct {
 	tags             tags
 }
 
+func (instances Ec2Instances) ToStringSlice() []string {
+	sl := make([]string, 0)
+	for _, i := range instances {
+		sl = append(sl, i.instanceID)
+	}
+	return sl
+}
+
 // Ec2Instances contains EC2 instance info
 type Ec2Instances []ec2Instance
 

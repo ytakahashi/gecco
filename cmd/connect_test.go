@@ -13,8 +13,12 @@ func TestConnect1(t *testing.T) {
 		return nil
 	}
 
+	fn2 := func() error {
+		return nil
+	}
+
 	expected := "Option '--target' is not specified"
-	actual := connect(c, fn)
+	actual := connect(c, fn, fn2)
 
 	if actual == nil {
 		t.Errorf("Error should be thrown.")
@@ -34,7 +38,11 @@ func TestConnect2(t *testing.T) {
 		return nil
 	}
 
-	actual := connect(c, fn)
+	fn2 := func() error {
+		return nil
+	}
+
+	actual := connect(c, fn, fn2)
 
 	if actual != nil {
 		t.Errorf("Error should not be thrown.")
