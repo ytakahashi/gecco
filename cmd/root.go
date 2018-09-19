@@ -18,7 +18,7 @@ func newRootCmd() *cobra.Command {
 		Long:  "A Command Line Tool To Oprtate AWS EC2.",
 	}
 
-	rootCmd.AddCommand(newListCmd(listCommand{}))
+	rootCmd.AddCommand(newListCmd(&listCommand{}))
 	rootCmd.AddCommand(newConnectCmd())
 
 	return rootCmd

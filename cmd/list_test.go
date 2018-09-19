@@ -10,8 +10,11 @@ import (
 
 type mockedListCommand1 struct{}
 
-func (c mockedListCommand1) runCommand(awsec2 aws.Ec2Client) error {
+func (c mockedListCommand1) runCommand() error {
 	return nil
+}
+
+func (c mockedListCommand1) initListCommand(o config.ListOption, client aws.Ec2Client) {
 }
 
 func TestNewListCmd(t *testing.T) {
@@ -67,26 +70,47 @@ func TestNewListCmd(t *testing.T) {
 	expectedTagValueFlagUsage := "filters instances by tag value"
 	actualTagValueFlagUsage := tagValueFlag.Usage
 	validate(name, expectedTagValueFlagUsage, actualTagValueFlagUsage)
+
+	err := command.RunE(nil, nil)
+	if err != nil {
+		t.Errorf("Error")
+	}
 }
 
 type mockedEc2_1 struct{}
-type mockedEc2_2 struct{}
 
 func (e mockedEc2_1) GetInstances(o config.ListOption) (instances aws.Ec2Instances, err error) {
 	return aws.Ec2Instances{}, nil
 }
 
+type mockedEc2_2 struct{}
+
 func (e mockedEc2_2) GetInstances(o config.ListOption) (instances aws.Ec2Instances, err error) {
 	return nil, errors.New("error")
 }
 
-func TestRunCommand1(t *testing.T) {
-	listOpts = &config.ListOption{Status: "foo"}
-	awsec2 := mockedEc2_1{}
-
+func TestInitListCommand(t *testing.T) {
+	o := config.ListOption{
+		Status: "status",
+	}
 	sut := listCommand{}
+	sut.initListCommand(o, mockedEc2_1{})
 
-	err := sut.runCommand(awsec2)
+	if sut.options != o {
+		t.Errorf("Error %v", sut.options)
+	}
+
+	if sut.ec2Client == nil {
+		t.Error("Error")
+	}
+}
+
+func TestRunCommand1(t *testing.T) {
+	sut := listCommand{
+		options: config.ListOption{Status: "foo"},
+	}
+
+	err := sut.runCommand()
 
 	if err == nil {
 		t.Error("Error should be thrown")
@@ -94,12 +118,12 @@ func TestRunCommand1(t *testing.T) {
 }
 
 func TestRunCommand2(t *testing.T) {
-	listOpts = &config.ListOption{}
-	awsec2 := mockedEc2_2{}
+	sut := listCommand{
+		options:   config.ListOption{},
+		ec2Client: mockedEc2_2{},
+	}
 
-	sut := listCommand{}
-
-	err := sut.runCommand(awsec2)
+	err := sut.runCommand()
 
 	if err == nil {
 		t.Error("Error should be thrown")
@@ -107,12 +131,12 @@ func TestRunCommand2(t *testing.T) {
 }
 
 func TestRunCommand3(t *testing.T) {
-	listOpts = &config.ListOption{}
-	awsec2 := mockedEc2_1{}
+	sut := listCommand{
+		options:   config.ListOption{},
+		ec2Client: mockedEc2_1{},
+	}
 
-	sut := listCommand{}
-
-	err := sut.runCommand(awsec2)
+	err := sut.runCommand()
 
 	if err != nil {
 		t.Errorf("%v", err)
