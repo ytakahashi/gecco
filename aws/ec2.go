@@ -1,13 +1,18 @@
 package aws
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/ytakahashi/gecco/config"
+	"github.com/ytakahashi/gecco/ext"
 )
 
 type tag struct {
@@ -17,7 +22,8 @@ type tag struct {
 
 type tags []tag
 
-type ec2Instance struct {
+// Ec2Instance Ec2Instance
+type Ec2Instance struct {
 	instanceID       string
 	instanceType     string
 	availabilityZone string
@@ -26,8 +32,57 @@ type ec2Instance struct {
 	tags             tags
 }
 
+func (instances Ec2Instances) toStringSlice() []string {
+	sl := make([]string, 0)
+	for _, i := range instances {
+		sl = append(sl, i.instanceID)
+	}
+	return sl
+}
+
 // Ec2Instances contains EC2 instance info
-type Ec2Instances []ec2Instance
+type Ec2Instances []Ec2Instance
+
+// Ec2 contains EC2 instance info
+type Ec2 struct{}
+
+// Ec2Client Ec2 Client
+type Ec2Client interface {
+	GetInstances(config.ListOption) (Ec2Instances, error)
+}
+
+// GetInstances Get Instances
+func (e Ec2) GetInstances(options config.ListOption) (instances Ec2Instances, err error) {
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+
+	ec2Svc := ec2.New(sess)
+
+	input := createInput(options)
+
+	result, err := ec2Svc.DescribeInstances(&input)
+	if err != nil {
+		return nil, err
+	}
+
+	instances = make(Ec2Instances, 0)
+	for _, r := range result.Reservations {
+		for _, i := range r.Instances {
+			instance := newEc2Instance(*i)
+			if instance.instanceID != "" {
+				instances = append(instances, instance)
+			}
+		}
+	}
+	return instances, nil
+}
+
+// Instances instances
+type Instances interface {
+	Print(w io.Writer)
+	GetFilteredInstances(ext.ICommand) (string, error)
+}
 
 // Print instances
 func (instances Ec2Instances) Print(w io.Writer) {
@@ -51,31 +106,28 @@ func (instances Ec2Instances) Print(w io.Writer) {
 	}
 }
 
-// DescribeEC2 returns EC2 instance info
-func DescribeEC2(options config.ListOption) (instances Ec2Instances, err error) {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
+// GetFilteredInstances GetFilteredInstances
+func (instances Ec2Instances) GetFilteredInstances(filter ext.ICommand) (selected string, err error) {
+	records := instances.toStringSlice()
+	var text string
+	for _, r := range records {
+		text += r + "\n"
+	}
 
-	ec2Svc := ec2.New(sess)
-
-	input := createInput(options)
-
-	result, err := ec2Svc.DescribeInstances(&input)
+	var buf bytes.Buffer
+	cmd := filter.CreateCommand(strings.NewReader(text), &buf, os.Stderr)
+	err = cmd.Run()
 	if err != nil {
-		return instances, err
+		return
 	}
 
-	instances = make(Ec2Instances, 0)
-	for _, r := range result.Reservations {
-		for _, i := range r.Instances {
-			instance := newEc2Instance(*i)
-			if instance.instanceID != "" {
-				instances = append(instances, instance)
-			}
-		}
+	if buf.Len() == 0 {
+		err = errors.New("No line is selected")
+		return
 	}
-	return instances, nil
+
+	selected = strings.TrimSpace(buf.String())
+	return
 }
 
 func createInput(options config.ListOption) ec2.DescribeInstancesInput {
@@ -115,7 +167,7 @@ func createInput(options config.ListOption) ec2.DescribeInstancesInput {
 	}
 }
 
-func newEc2Instance(i ec2.Instance) ec2Instance {
+func newEc2Instance(i ec2.Instance) Ec2Instance {
 	tags := make(tags, 0)
 	for _, t := range i.Tags {
 		tag := tag{key: *t.Key, value: *t.Value}
@@ -134,7 +186,7 @@ func newEc2Instance(i ec2.Instance) ec2Instance {
 		status = aws.StringValue(s.Name)
 	}
 
-	return ec2Instance{
+	return Ec2Instance{
 		instanceID:       aws.StringValue(i.InstanceId),
 		instanceType:     aws.StringValue(i.InstanceType),
 		availabilityZone: az,

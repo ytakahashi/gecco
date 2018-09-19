@@ -1,48 +1,27 @@
 package cmd
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/ytakahashi/gecco/aws"
 	"github.com/ytakahashi/gecco/config"
+	"github.com/ytakahashi/gecco/ext"
 )
 
-func TestConnect1(t *testing.T) {
-	c := config.ConnectOptions{}
-
-	fn := func(target string) error {
-		return nil
-	}
-
-	expected := "Option '--target' is not specified"
-	actual := connect(c, fn)
-
-	if actual == nil {
-		t.Errorf("Error should be thrown.")
-	}
-
-	if actual.Error() != expected {
-		t.Errorf("Error:\n Actual: %v\n Expected: %v", actual, expected)
-	}
+type mockedConnectCommand1 struct {
 }
 
-func TestConnect2(t *testing.T) {
-	c := config.ConnectOptions{
-		Target: "target",
-	}
+func (c *mockedConnectCommand1) initConnectCommand(o config.ConnectOption, client aws.Ec2Client, conf config.IConfig) (err error) {
+	return
+}
 
-	fn := func(target string) error {
-		return nil
-	}
-
-	actual := connect(c, fn)
-
-	if actual != nil {
-		t.Errorf("Error should not be thrown.")
-	}
+func (c mockedConnectCommand1) runCommand() (err error) {
+	return
 }
 
 func TestNewConnectCmd(t *testing.T) {
-	command := newConnectCmd()
+	command := newConnectCmd(&mockedConnectCommand1{})
 
 	validate := func(name string, actual string, expected string) {
 		if actual != expected {
@@ -77,37 +56,108 @@ func TestNewConnectCmd(t *testing.T) {
 	expectedStatusFlagUsage := "target instanceId to start session"
 	actualStatusFlagUsage := targetFlag.Usage
 	validate(name, actualStatusFlagUsage, expectedStatusFlagUsage)
-}
 
-func TestCreateCommand(t *testing.T) {
-	target := "TARGET"
-	actual := createCommand(target)
-
-	validate := func(act, expc string) {
-		if act != expc {
-			t.Errorf("Error:\n Actual: %v\nExpected: %v", act, expc)
-		}
-	}
-
-	if len(actual.Args) != 5 {
+	err := command.RunE(nil, nil)
+	if err != nil {
 		t.Errorf("Error")
 	}
+}
 
-	validate(actual.Args[0], "aws")
-	validate(actual.Args[1], "ssm")
-	validate(actual.Args[2], "start-session")
-	validate(actual.Args[3], "--target")
-	validate(actual.Args[4], "TARGET")
-
-	if actual.Stdin == nil {
-		t.Errorf("Error: should not be nil.")
+func TestRunCommand_Error1(t *testing.T) {
+	opts := config.ConnectOption{
+		Target:      "foo",
+		Interactive: true,
+	}
+	command := connectCommand{
+		option: opts,
 	}
 
-	if actual.Stdout == nil {
-		t.Errorf("Error: should not be nil.")
+	err := command.runCommand()
+
+	if err == nil {
+		t.Error("Erroe")
+	}
+}
+
+func TestInitConnectCommand(t *testing.T) {
+	opts := config.ConnectOption{
+		Interactive: false,
 	}
 
-	if actual.Stderr == nil {
-		t.Errorf("Error: should not be nil.")
+	command := connectCommand{}
+
+	err := command.initConnectCommand(opts, mockedEc2_3{}, config.Config{})
+
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+type mockedEc2_3 struct{}
+
+func (e mockedEc2_3) GetInstances(options config.ListOption) (instances aws.Ec2Instances, err error) {
+	return nil, errors.New("error")
+}
+
+func TestRunCommand_Error2(t *testing.T) {
+	opts := config.ConnectOption{
+		Interactive: true,
+	}
+	command := connectCommand{
+		option:    opts,
+		ec2Client: mockedEc2_3{},
+	}
+
+	err := command.runCommand()
+
+	if err == nil {
+		t.Error("Error")
+	}
+}
+
+type mockedEc2_4 struct{}
+
+func (e mockedEc2_4) GetInstances(options config.ListOption) (instances aws.Ec2Instances, err error) {
+	return aws.Ec2Instances{}, nil
+}
+
+func TestRunCommand_Normal1(t *testing.T) {
+	opts := config.ConnectOption{
+		Interactive: true,
+	}
+	command := connectCommand{
+		option:                   opts,
+		ec2Client:                mockedEc2_4{},
+		interactiveFilterCommand: "echo",
+	}
+
+	startSession = ext.Command{
+		Args: []string{"echo"},
+	}
+
+	err := command.runCommand()
+
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+func TestRunCommand_Normal2(t *testing.T) {
+	opts := config.ConnectOption{
+		Target:      "foo",
+		Interactive: false,
+	}
+	command := connectCommand{
+		option: opts,
+	}
+
+	startSession = ext.Command{
+		Args: []string{"echo"},
+	}
+
+	err := command.runCommand()
+
+	if err != nil {
+		t.Errorf("%v", err)
 	}
 }

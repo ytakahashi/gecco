@@ -8,8 +8,17 @@ import (
 	"github.com/ytakahashi/gecco/config"
 )
 
+type mockedListCommand1 struct{}
+
+func (c mockedListCommand1) runCommand() error {
+	return nil
+}
+
+func (c mockedListCommand1) initListCommand(o config.ListOption, client aws.Ec2Client) {
+}
+
 func TestNewListCmd(t *testing.T) {
-	command := newListCmd()
+	command := newListCmd(mockedListCommand1{})
 
 	validate := func(name string, actual string, expected string) {
 		if actual != expected {
@@ -61,28 +70,75 @@ func TestNewListCmd(t *testing.T) {
 	expectedTagValueFlagUsage := "filters instances by tag value"
 	actualTagValueFlagUsage := tagValueFlag.Usage
 	validate(name, expectedTagValueFlagUsage, actualTagValueFlagUsage)
-}
 
-func TestList_Normal(t *testing.T) {
-	options := config.ListOption{}
-	aFunc := func(o config.ListOption) (instances aws.Ec2Instances, err error) {
-		return aws.Ec2Instances{}, nil
-	}
-
-	err := list(options, aFunc)
+	err := command.RunE(nil, nil)
 	if err != nil {
-		t.Errorf("Error should not be thrown.")
+		t.Errorf("Error")
 	}
 }
 
-func TestList_Error(t *testing.T) {
-	options := config.ListOption{}
-	aFunc := func(o config.ListOption) (instances aws.Ec2Instances, err error) {
-		return nil, errors.New("error")
+type mockedEc2_1 struct{}
+
+func (e mockedEc2_1) GetInstances(o config.ListOption) (instances aws.Ec2Instances, err error) {
+	return aws.Ec2Instances{}, nil
+}
+
+type mockedEc2_2 struct{}
+
+func (e mockedEc2_2) GetInstances(o config.ListOption) (instances aws.Ec2Instances, err error) {
+	return nil, errors.New("error")
+}
+
+func TestInitListCommand(t *testing.T) {
+	o := config.ListOption{
+		Status: "status",
+	}
+	sut := listCommand{}
+	sut.initListCommand(o, mockedEc2_1{})
+
+	if sut.options != o {
+		t.Errorf("Error %v", sut.options)
 	}
 
-	err := list(options, aFunc)
+	if sut.ec2Client == nil {
+		t.Error("Error")
+	}
+}
+
+func TestRunCommand1(t *testing.T) {
+	sut := listCommand{
+		options: config.ListOption{Status: "foo"},
+	}
+
+	err := sut.runCommand()
+
 	if err == nil {
-		t.Errorf("Error should be thrown.")
+		t.Error("Error should be thrown")
+	}
+}
+
+func TestRunCommand2(t *testing.T) {
+	sut := listCommand{
+		options:   config.ListOption{},
+		ec2Client: mockedEc2_2{},
+	}
+
+	err := sut.runCommand()
+
+	if err == nil {
+		t.Error("Error should be thrown")
+	}
+}
+
+func TestRunCommand3(t *testing.T) {
+	sut := listCommand{
+		options:   config.ListOption{},
+		ec2Client: mockedEc2_1{},
+	}
+
+	err := sut.runCommand()
+
+	if err != nil {
+		t.Errorf("%v", err)
 	}
 }

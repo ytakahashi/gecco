@@ -3,6 +3,8 @@ package aws
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"os/exec"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,7 +14,7 @@ import (
 
 func TestPrint1(t *testing.T) {
 	buf := &bytes.Buffer{}
-	i := ec2Instance{
+	i := Ec2Instance{
 		instanceID:       "instance id",
 		instanceType:     "instance type",
 		availabilityZone: "az",
@@ -38,7 +40,7 @@ func TestPrint1(t *testing.T) {
 
 func TestPrint2(t *testing.T) {
 	buf := &bytes.Buffer{}
-	i := ec2Instance{
+	i := Ec2Instance{
 		instanceID:       "instance id",
 		instanceType:     "instance type",
 		availabilityZone: "az",
@@ -184,5 +186,62 @@ func TestNew(t *testing.T) {
 	val := "v"
 	if actual.tags[0].value != val {
 		t.Errorf("tag value:\nActual: %v\nExpected: %v", actual.tags[0].value, val)
+	}
+}
+
+type mockedCommand1 struct{}
+type mockedCommand2 struct{}
+
+func (c mockedCommand1) CreateCommand(i io.Reader, o io.Writer, e io.Writer) *exec.Cmd {
+	command := exec.Command("echo")
+	command.Args = []string{"echo", "foo"}
+	command.Stdin = i
+	command.Stdout = o
+	command.Stderr = e
+	return command
+}
+
+func (c mockedCommand2) CreateCommand(i io.Reader, o io.Writer, e io.Writer) *exec.Cmd {
+	command := exec.Command("foo")
+	command.Args = []string{"foo"}
+	command.Stdin = i
+	command.Stdout = o
+	command.Stderr = e
+	return command
+}
+
+func TestGetFilteredInstances1(t *testing.T) {
+	i := Ec2Instances{
+		Ec2Instance{
+			instanceID: "instanceId",
+		},
+	}
+
+	mockedFilter := mockedCommand1{}
+
+	str, err := i.GetFilteredInstances(mockedFilter)
+	if err != nil {
+		t.Errorf("err value:\nActual: %v", err)
+	}
+	if str == "" {
+		t.Errorf("Error")
+	}
+	if str != "foo" {
+		t.Errorf("str value:\nActual: %v", str)
+	}
+
+}
+
+func TestGetFilteredInstances2(t *testing.T) {
+	i := Ec2Instances{}
+
+	mockedFilter := mockedCommand2{}
+
+	str, err := i.GetFilteredInstances(mockedFilter)
+	if err == nil {
+		t.Errorf("Error should be thrown.")
+	}
+	if str != "" {
+		t.Errorf("str value:\nActual: %v", str)
 	}
 }

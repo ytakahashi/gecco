@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -9,18 +8,15 @@ import (
 	"github.com/ytakahashi/gecco/config"
 )
 
-var listOpts = &config.ListOption{}
-
-func newListCmd() *cobra.Command {
+func newListCmd(command iListCommand) *cobra.Command {
+	listOpts := &config.ListOption{}
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "lists EC2 instances",
-		Run: func(cmd *cobra.Command, args []string) {
-			if err := (*listOpts).IsValid(); err != nil {
-				fmt.Println("Error:", err)
-				os.Exit(1)
-			}
-			list(*listOpts, aws.DescribeEC2)
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			command.initListCommand(*listOpts, aws.Ec2{})
+			err = command.runCommand()
+			return
 		},
 	}
 
@@ -31,15 +27,34 @@ func newListCmd() *cobra.Command {
 	return listCmd
 }
 
-func list(
-	options config.ListOption,
-	getInstances func(config.ListOption) (instances aws.Ec2Instances, err error),
-) error {
-	instances, err := getInstances(options)
+type iListCommand interface {
+	initListCommand(config.ListOption, aws.Ec2Client)
+	runCommand() error
+}
+
+type listCommand struct {
+	options   config.ListOption
+	ec2Client aws.Ec2Client
+}
+
+func (c *listCommand) initListCommand(o config.ListOption, client aws.Ec2Client) {
+	c.ec2Client = client
+	c.options = o
+}
+
+func (c listCommand) runCommand() (err error) {
+	options := c.options
+
+	err = options.IsValid()
 	if err != nil {
 		return err
 	}
-	instances.Print(os.Stdout)
 
-	return nil
+	instances, err := c.ec2Client.GetInstances(options)
+	if err != nil {
+		return err
+	}
+
+	instances.Print(os.Stdout)
+	return
 }

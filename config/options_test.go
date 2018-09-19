@@ -5,6 +5,49 @@ import (
 	"testing"
 )
 
+func TestConnectOption_IsValid_Error1(t *testing.T) {
+	c := ConnectOption{}
+	expected := "Option '--target' or '-i' is required"
+	actual := c.IsValid()
+
+	if actual == nil {
+		t.Errorf("Error should be thrown.")
+	}
+
+	if actual.Error() != expected {
+		t.Errorf("Error:\n Actual: %v\n Expected: %v", actual, expected)
+	}
+}
+
+func TestConnectOption_IsValid_Error2(t *testing.T) {
+	c := ConnectOption{
+		Target:      "foo",
+		Interactive: true,
+	}
+	expected := "Options '--target' and '-i' cannot be used at the same time"
+	actual := c.IsValid()
+
+	if actual == nil {
+		t.Errorf("Error should be thrown.")
+	}
+
+	if actual.Error() != expected {
+		t.Errorf("Error:\n Actual: %v\n Expected: %v", actual, expected)
+	}
+}
+
+func TestConnectOption_IsValid_Ok(t *testing.T) {
+	c := ConnectOption{
+		Interactive: true,
+	}
+
+	actual := c.IsValid()
+
+	if actual != nil {
+		t.Errorf("Error should not be thrown.")
+	}
+}
+
 func TestIsValid_One(t *testing.T) {
 	options := ListOption{}
 
