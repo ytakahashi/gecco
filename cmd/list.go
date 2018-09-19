@@ -11,17 +11,15 @@ import (
 
 var listOpts = &config.ListOption{}
 
-func newListCmd() *cobra.Command {
+func newListCmd(command iListCommand) *cobra.Command {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "lists EC2 instances",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := (*listOpts).IsValid(); err != nil {
+			if err := command.runCommand(aws.Ec2{}); err != nil {
 				fmt.Println("Error:", err)
 				os.Exit(1)
 			}
-			e := aws.Ec2{}
-			list(*listOpts, e)
 		},
 	}
 
@@ -32,15 +30,24 @@ func newListCmd() *cobra.Command {
 	return listCmd
 }
 
-func list(
-	options config.ListOption,
-	e aws.Ec2Client,
-) error {
-	instances, err := e.GetInstances(options)
+type listCommand struct{}
+
+type iListCommand interface {
+	runCommand(aws.Ec2Client) error
+}
+
+func (c listCommand) runCommand(awsec2 aws.Ec2Client) (err error) {
+	options := *listOpts
+	err = options.IsValid()
 	if err != nil {
 		return err
 	}
-	instances.Print(os.Stdout)
 
-	return nil
+	instances, err := awsec2.GetInstances(options)
+	if err != nil {
+		return err
+	}
+
+	instances.Print(os.Stdout)
+	return
 }

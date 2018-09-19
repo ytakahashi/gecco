@@ -9,8 +9,6 @@ import (
 	"github.com/ytakahashi/gecco/config"
 )
 
-// var conf config.Config
-
 var cfgFile string
 
 func newRootCmd() *cobra.Command {
@@ -20,7 +18,7 @@ func newRootCmd() *cobra.Command {
 		Long:  "A Command Line Tool To Oprtate AWS EC2.",
 	}
 
-	rootCmd.AddCommand(newListCmd())
+	rootCmd.AddCommand(newListCmd(listCommand{}))
 	rootCmd.AddCommand(newConnectCmd())
 
 	return rootCmd

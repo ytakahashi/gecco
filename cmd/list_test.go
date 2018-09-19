@@ -8,8 +8,14 @@ import (
 	"github.com/ytakahashi/gecco/config"
 )
 
+type mockedListCommand1 struct{}
+
+func (c mockedListCommand1) runCommand(awsec2 aws.Ec2Client) error {
+	return nil
+}
+
 func TestNewListCmd(t *testing.T) {
-	command := newListCmd()
+	command := newListCmd(mockedListCommand1{})
 
 	validate := func(name string, actual string, expected string) {
 		if actual != expected {
@@ -74,22 +80,41 @@ func (e mockedEc2_2) GetInstances(o config.ListOption) (instances aws.Ec2Instanc
 	return nil, errors.New("error")
 }
 
-func TestList_Normal(t *testing.T) {
-	options := config.ListOption{}
+func TestRunCommand1(t *testing.T) {
+	listOpts = &config.ListOption{Status: "foo"}
+	awsec2 := mockedEc2_1{}
 
-	m := mockedEc2_1{}
-	err := list(options, m)
-	if err != nil {
-		t.Errorf("Error should not be thrown.")
+	sut := listCommand{}
+
+	err := sut.runCommand(awsec2)
+
+	if err == nil {
+		t.Error("Error should be thrown")
 	}
 }
 
-func TestList_Error(t *testing.T) {
-	options := config.ListOption{}
+func TestRunCommand2(t *testing.T) {
+	listOpts = &config.ListOption{}
+	awsec2 := mockedEc2_2{}
 
-	m := mockedEc2_2{}
-	err := list(options, m)
+	sut := listCommand{}
+
+	err := sut.runCommand(awsec2)
+
 	if err == nil {
-		t.Errorf("Error should be thrown.")
+		t.Error("Error should be thrown")
+	}
+}
+
+func TestRunCommand3(t *testing.T) {
+	listOpts = &config.ListOption{}
+	awsec2 := mockedEc2_1{}
+
+	sut := listCommand{}
+
+	err := sut.runCommand(awsec2)
+
+	if err != nil {
+		t.Errorf("%v", err)
 	}
 }
