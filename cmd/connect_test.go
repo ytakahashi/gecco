@@ -1,32 +1,27 @@
 package cmd
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/ytakahashi/gecco/aws"
 	"github.com/ytakahashi/gecco/config"
+	"github.com/ytakahashi/gecco/ext"
 )
 
-type mockedEc2_3 struct{}
-
-func (e mockedEc2_3) GetInstances(options config.ListOption) (instances aws.Ec2Instances, err error) {
-	i := aws.Ec2Instance{}
-	return aws.Ec2Instances{i}, nil
+type mockedConnectCommand1 struct {
 }
 
-type mockedConnectCommand struct {
-}
-
-func (c *mockedConnectCommand) initConnectCommand(o config.ConnectOption, client aws.Ec2Client, conf config.IConfig) (err error) {
+func (c *mockedConnectCommand1) initConnectCommand(o config.ConnectOption, client aws.Ec2Client, conf config.IConfig) (err error) {
 	return
 }
 
-func (c mockedConnectCommand) runCommand() (err error) {
+func (c mockedConnectCommand1) runCommand() (err error) {
 	return
 }
 
 func TestNewConnectCmd(t *testing.T) {
-	command := newConnectCmd(&mockedConnectCommand{})
+	command := newConnectCmd(&mockedConnectCommand1{})
 
 	validate := func(name string, actual string, expected string) {
 		if actual != expected {
@@ -65,5 +60,104 @@ func TestNewConnectCmd(t *testing.T) {
 	err := command.RunE(nil, nil)
 	if err != nil {
 		t.Errorf("Error")
+	}
+}
+
+func TestRunCommand_Error1(t *testing.T) {
+	opts := config.ConnectOption{
+		Target:      "foo",
+		Interactive: true,
+	}
+	command := connectCommand{
+		option: opts,
+	}
+
+	err := command.runCommand()
+
+	if err == nil {
+		t.Error("Erroe")
+	}
+}
+
+func TestInitConnectCommand(t *testing.T) {
+	opts := config.ConnectOption{
+		Interactive: false,
+	}
+
+	command := connectCommand{}
+
+	err := command.initConnectCommand(opts, mockedEc2_3{}, config.Config{})
+
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+type mockedEc2_3 struct{}
+
+func (e mockedEc2_3) GetInstances(options config.ListOption) (instances aws.Ec2Instances, err error) {
+	return nil, errors.New("error")
+}
+
+func TestRunCommand_Error2(t *testing.T) {
+	opts := config.ConnectOption{
+		Interactive: true,
+	}
+	command := connectCommand{
+		option:    opts,
+		ec2Client: mockedEc2_3{},
+	}
+
+	err := command.runCommand()
+
+	if err == nil {
+		t.Error("Error")
+	}
+}
+
+type mockedEc2_4 struct{}
+
+func (e mockedEc2_4) GetInstances(options config.ListOption) (instances aws.Ec2Instances, err error) {
+	return aws.Ec2Instances{}, nil
+}
+
+func TestRunCommand_Normal1(t *testing.T) {
+	opts := config.ConnectOption{
+		Interactive: true,
+	}
+	command := connectCommand{
+		option:                   opts,
+		ec2Client:                mockedEc2_4{},
+		interactiveFilterCommand: "echo",
+	}
+
+	startSession = ext.Command{
+		Args: []string{"echo"},
+	}
+
+	err := command.runCommand()
+
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+func TestRunCommand_Normal2(t *testing.T) {
+	opts := config.ConnectOption{
+		Target:      "foo",
+		Interactive: false,
+	}
+	command := connectCommand{
+		option: opts,
+	}
+
+	startSession = ext.Command{
+		Args: []string{"echo"},
+	}
+
+	err := command.runCommand()
+
+	if err != nil {
+		t.Errorf("%v", err)
 	}
 }

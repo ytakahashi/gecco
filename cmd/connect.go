@@ -38,7 +38,7 @@ type iConnectCommand interface {
 }
 
 type connectCommand struct {
-	options                  config.ConnectOption
+	option                   config.ConnectOption
 	ec2Client                aws.Ec2Client
 	interactiveFilterCommand string
 	command                  ext.ICommand
@@ -47,7 +47,7 @@ type connectCommand struct {
 
 func (c *connectCommand) initConnectCommand(o config.ConnectOption, client aws.Ec2Client, conf config.IConfig) (err error) {
 	c.ec2Client = client
-	c.options = o
+	c.option = o
 
 	if o.Interactive {
 		if err = conf.InitConfig(); err != nil {
@@ -57,16 +57,20 @@ func (c *connectCommand) initConnectCommand(o config.ConnectOption, client aws.E
 		c.interactiveFilterCommand = conf.GetConfig().InteractiveFilterCommand
 	}
 
+	c.command = ext.Command{
+		Args: []string{"aws", "ssm", "start-session", "--target"},
+	}
+
 	return
 }
 
 func (c connectCommand) runCommand() (err error) {
-	if err = c.options.IsValid(); err != nil {
+	if err = c.option.IsValid(); err != nil {
 		return err
 	}
 
 	var target string
-	if c.options.Interactive {
+	if c.option.Interactive {
 		instances, err := c.ec2Client.GetInstances(config.ListOption{})
 		if err != nil {
 			return err
@@ -81,7 +85,7 @@ func (c connectCommand) runCommand() (err error) {
 			return err
 		}
 	} else {
-		target = c.options.Target
+		target = c.option.Target
 	}
 
 	startSession.Args = append(startSession.Args, target)
