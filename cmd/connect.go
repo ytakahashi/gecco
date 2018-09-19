@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -11,20 +9,20 @@ import (
 	"github.com/ytakahashi/gecco/ext"
 )
 
-var connectOpts = &config.ConnectOptions{}
+var connectOpts = &config.ConnectOption{}
 
-func newConnectCmd() *cobra.Command {
+func newConnectCmd(command iConnectCommand) *cobra.Command {
 	connectCmd := &cobra.Command{
 		Use:   "connect",
 		Short: "connect to EC2 instance",
 		Long:  "connect to EC2 instance using 'aws cli start-session' command",
-		Run: func(cmd *cobra.Command, args []string) {
-			e := aws.Ec2{}
-			err := connect(*connectOpts, doRun, initConfig, e)
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			err = command.initConnectCommand(*connectOpts, aws.Ec2{}, config.Config{})
 			if err != nil {
-				fmt.Println("Error:", err)
-				os.Exit(1)
+				return
 			}
+			err = command.runCommand()
+			return
 		},
 	}
 
@@ -34,25 +32,48 @@ func newConnectCmd() *cobra.Command {
 	return connectCmd
 }
 
-func connect(
-	options config.ConnectOptions,
-	run func(string) error,
-	init func() error,
-	client aws.Ec2Client,
-) error {
-	var target string
-	if options.Interactive {
-		if err := init(); err != nil {
+type iConnectCommand interface {
+	initConnectCommand(config.ConnectOption, aws.Ec2Client, config.IConfig) error
+	runCommand() error
+}
+
+type connectCommand struct {
+	options                  config.ConnectOption
+	ec2Client                aws.Ec2Client
+	interactiveFilterCommand string
+	command                  ext.ICommand
+	config                   config.IConfig
+}
+
+func (c *connectCommand) initConnectCommand(o config.ConnectOption, client aws.Ec2Client, conf config.IConfig) (err error) {
+	c.ec2Client = client
+	c.options = o
+
+	if o.Interactive {
+		if err = conf.InitConfig(); err != nil {
 			return err
 		}
 
-		instances, err := client.GetInstances(config.ListOption{})
+		c.interactiveFilterCommand = conf.GetConfig().InteractiveFilterCommand
+	}
+
+	return
+}
+
+func (c connectCommand) runCommand() (err error) {
+	if err = c.options.IsValid(); err != nil {
+		return err
+	}
+
+	var target string
+	if c.options.Interactive {
+		instances, err := c.ec2Client.GetInstances(config.ListOption{})
 		if err != nil {
 			return err
 		}
 
 		filter := ext.Command{
-			Args: []string{config.Conf.InteractiveFilterCommand},
+			Args: []string{c.interactiveFilterCommand},
 		}
 
 		target, err = instances.GetFilteredInstances(filter)
@@ -60,20 +81,13 @@ func connect(
 			return err
 		}
 	} else {
-		if options.Target == "" {
-			return errors.New("Option '--target' is not specified")
-		}
-		target = options.Target
+		target = c.options.Target
 	}
-	return run(target)
 
+	startSession.Args = append(startSession.Args, target)
+	return startSession.CreateCommand(os.Stdin, os.Stdout, os.Stderr).Run()
 }
 
 var startSession = ext.Command{
 	Args: []string{"aws", "ssm", "start-session", "--target"},
-}
-
-func doRun(target string) error {
-	startSession.Args = append(startSession.Args, target)
-	return startSession.CreateCommand(os.Stdin, os.Stdout, os.Stderr).Run()
 }

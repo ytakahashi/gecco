@@ -14,55 +14,19 @@ func (e mockedEc2_3) GetInstances(options config.ListOption) (instances aws.Ec2I
 	return aws.Ec2Instances{i}, nil
 }
 
-func TestConnect1(t *testing.T) {
-	c := config.ConnectOptions{}
-
-	fn := func(target string) error {
-		return nil
-	}
-
-	fn2 := func() error {
-		return nil
-	}
-
-	e := mockedEc2_3{}
-
-	expected := "Option '--target' is not specified"
-	actual := connect(c, fn, fn2, e)
-
-	if actual == nil {
-		t.Errorf("Error should be thrown.")
-	}
-
-	if actual.Error() != expected {
-		t.Errorf("Error:\n Actual: %v\n Expected: %v", actual, expected)
-	}
+type mockedConnectCommand struct {
 }
 
-func TestConnect2(t *testing.T) {
-	c := config.ConnectOptions{
-		Target: "target",
-	}
+func (c *mockedConnectCommand) initConnectCommand(o config.ConnectOption, client aws.Ec2Client, conf config.IConfig) (err error) {
+	return
+}
 
-	fn := func(target string) error {
-		return nil
-	}
-
-	fn2 := func() error {
-		return nil
-	}
-
-	e := mockedEc2_3{}
-
-	actual := connect(c, fn, fn2, e)
-
-	if actual != nil {
-		t.Errorf("Error should not be thrown.")
-	}
+func (c mockedConnectCommand) runCommand() (err error) {
+	return
 }
 
 func TestNewConnectCmd(t *testing.T) {
-	command := newConnectCmd()
+	command := newConnectCmd(&mockedConnectCommand{})
 
 	validate := func(name string, actual string, expected string) {
 		if actual != expected {
@@ -97,4 +61,9 @@ func TestNewConnectCmd(t *testing.T) {
 	expectedStatusFlagUsage := "target instanceId to start session"
 	actualStatusFlagUsage := targetFlag.Usage
 	validate(name, actualStatusFlagUsage, expectedStatusFlagUsage)
+
+	err := command.RunE(nil, nil)
+	if err != nil {
+		t.Errorf("Error")
+	}
 }

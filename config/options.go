@@ -5,13 +5,10 @@ import (
 	"fmt"
 )
 
-// Config file
-type Config struct {
-	InteractiveFilterCommand string
+// IOption is an interface for option
+type IOption interface {
+	IsValid() error
 }
-
-// Conf Config
-var Conf Config
 
 // ListOption stores options for list command
 type ListOption struct {
@@ -20,13 +17,26 @@ type ListOption struct {
 	Status   string
 }
 
-// ConnectOptions stores options for connect command
-type ConnectOptions struct {
+// ConnectOption stores options for connect command
+type ConnectOption struct {
 	Target      string
 	Interactive bool
 }
 
-// IsValid returns true if optons are valid
+// IsValid returns nil if optons are valid
+func (option ConnectOption) IsValid() error {
+	if option.Target == "" && option.Interactive == false {
+		return errors.New("Option '--target' or '-i' is required")
+	}
+
+	if option.Target != "" && option.Interactive == true {
+		return errors.New("Options '--target' and '-i' cannot be used at the same time")
+	}
+
+	return nil
+}
+
+// IsValid returns nil if optons are valid
 func (option ListOption) IsValid() error {
 	if option.Status != "" && !isValidStatus(option.Status) {
 		return fmt.Errorf("Invalid status (%s)", option.Status)
