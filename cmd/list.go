@@ -20,7 +20,8 @@ func newListCmd() *cobra.Command {
 				fmt.Println("Error:", err)
 				os.Exit(1)
 			}
-			list(*listOpts, aws.DescribeEC2)
+			e := aws.Ec2{}
+			list(*listOpts, e)
 		},
 	}
 
@@ -33,9 +34,9 @@ func newListCmd() *cobra.Command {
 
 func list(
 	options config.ListOption,
-	getInstances func(config.ListOption) (instances aws.Ec2Instances, err error),
+	e aws.Ec2Client,
 ) error {
-	instances, err := getInstances(options)
+	instances, err := e.GetInstances(options)
 	if err != nil {
 		return err
 	}

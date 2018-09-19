@@ -3,8 +3,16 @@ package cmd
 import (
 	"testing"
 
+	"github.com/ytakahashi/gecco/aws"
 	"github.com/ytakahashi/gecco/config"
 )
+
+type mockedEc2_3 struct{}
+
+func (e mockedEc2_3) GetInstances(options config.ListOption) (instances aws.Ec2Instances, err error) {
+	i := aws.Ec2Instance{}
+	return aws.Ec2Instances{i}, nil
+}
 
 func TestConnect1(t *testing.T) {
 	c := config.ConnectOptions{}
@@ -17,8 +25,10 @@ func TestConnect1(t *testing.T) {
 		return nil
 	}
 
+	e := mockedEc2_3{}
+
 	expected := "Option '--target' is not specified"
-	actual := connect(c, fn, fn2)
+	actual := connect(c, fn, fn2, e)
 
 	if actual == nil {
 		t.Errorf("Error should be thrown.")
@@ -42,7 +52,9 @@ func TestConnect2(t *testing.T) {
 		return nil
 	}
 
-	actual := connect(c, fn, fn2)
+	e := mockedEc2_3{}
+
+	actual := connect(c, fn, fn2, e)
 
 	if actual != nil {
 		t.Errorf("Error should not be thrown.")
@@ -85,37 +97,4 @@ func TestNewConnectCmd(t *testing.T) {
 	expectedStatusFlagUsage := "target instanceId to start session"
 	actualStatusFlagUsage := targetFlag.Usage
 	validate(name, actualStatusFlagUsage, expectedStatusFlagUsage)
-}
-
-func TestCreateCommand(t *testing.T) {
-	target := "TARGET"
-	actual := createCommand(target)
-
-	validate := func(act, expc string) {
-		if act != expc {
-			t.Errorf("Error:\n Actual: %v\nExpected: %v", act, expc)
-		}
-	}
-
-	if len(actual.Args) != 5 {
-		t.Errorf("Error")
-	}
-
-	validate(actual.Args[0], "aws")
-	validate(actual.Args[1], "ssm")
-	validate(actual.Args[2], "start-session")
-	validate(actual.Args[3], "--target")
-	validate(actual.Args[4], "TARGET")
-
-	if actual.Stdin == nil {
-		t.Errorf("Error: should not be nil.")
-	}
-
-	if actual.Stdout == nil {
-		t.Errorf("Error: should not be nil.")
-	}
-
-	if actual.Stderr == nil {
-		t.Errorf("Error: should not be nil.")
-	}
 }

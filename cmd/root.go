@@ -9,7 +9,7 @@ import (
 	"github.com/ytakahashi/gecco/config"
 )
 
-var conf config.Config
+// var conf config.Config
 
 var cfgFile string
 
@@ -41,34 +41,13 @@ func initConfig() (err error) {
 
 	viper.AutomaticEnv()
 
-	err = viper.ReadInConfig()
-	if err != nil {
+	if err = viper.ReadInConfig(); err != nil {
 		return
-		// panic(fmt.Errorf("error config file: %s", err))
 	}
 
-	if err = viper.Unmarshal(&conf); err != nil {
+	if err = viper.Unmarshal(&config.Conf); err != nil {
 		return
-		// fmt.Println(err)
-		// os.Exit(1)
 	}
+
 	return
-
-	// if cfgFile != "" {
-	// 	viper.SetConfigFile(cfgFile)
-	// } else {
-	// 	home, err := homedir.Dir()
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 		os.Exit(1)
-	// 	}
-
-	// 	viper.AddConfigPath(home)
-	// 	viper.SetConfigName(".gecco")
-	// }
-
-	// if err := viper.ReadInConfig(); err != nil {
-	// 	fmt.Println("Can't read config:", err)
-	// 	os.Exit(1)
-	// }
 }

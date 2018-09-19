@@ -1,17 +1,14 @@
 package cmd
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/ytakahashi/gecco/aws"
 	"github.com/ytakahashi/gecco/config"
+	"github.com/ytakahashi/gecco/ext"
 )
 
 var connectOpts = &config.ConnectOptions{}
@@ -22,7 +19,8 @@ func newConnectCmd() *cobra.Command {
 		Short: "connect to EC2 instance",
 		Long:  "connect to EC2 instance using 'aws cli start-session' command",
 		Run: func(cmd *cobra.Command, args []string) {
-			err := connect(*connectOpts, doRun, initConfig)
+			e := aws.Ec2{}
+			err := connect(*connectOpts, doRun, initConfig, e)
 			if err != nil {
 				fmt.Println("Error:", err)
 				os.Exit(1)
@@ -40,6 +38,7 @@ func connect(
 	options config.ConnectOptions,
 	run func(string) error,
 	init func() error,
+	client aws.Ec2Client,
 ) error {
 	var target string
 	if options.Interactive {
@@ -47,13 +46,16 @@ func connect(
 			return err
 		}
 
-		i, err := aws.DescribeEC2(config.ListOption{})
+		instances, err := client.GetInstances(config.ListOption{})
 		if err != nil {
 			return err
 		}
-		sl := i.ToStringSlice()
 
-		target, err = filter(conf, sl)
+		filter := ext.Command{
+			Args: []string{config.Conf.InteractiveFilterCommand},
+		}
+
+		target, err = instances.GetFilteredInstances(filter)
 		if err != nil {
 			return err
 		}
@@ -67,38 +69,11 @@ func connect(
 
 }
 
+var startSession = ext.Command{
+	Args: []string{"aws", "ssm", "start-session", "--target"},
+}
+
 func doRun(target string) error {
-	return createCommand([]string{"aws", "ssm", "start-session", "--target", target}, os.Stdin, os.Stdout, os.Stderr).Run()
-}
-
-func filter(conf config.Config, records []string) (selected string, err error) {
-	var text string
-	for _, r := range records {
-		text += r + "\n"
-	}
-
-	buf, err := doFilter(conf, text)
-
-	if buf.Len() == 0 {
-		err = errors.New("No line is selected")
-		return
-	}
-
-	selected = strings.TrimSpace(buf.String())
-	return
-}
-
-func doFilter(conf config.Config, text string) (buf bytes.Buffer, err error) {
-	cmd := createCommand([]string{conf.InteractiveFilterCommand}, os.Stderr, &buf, strings.NewReader(text))
-	err = cmd.Run()
-	return
-}
-
-func createCommand(commandWithArgs []string, e, o io.Writer, i io.Reader) *exec.Cmd {
-	command := exec.Command(commandWithArgs[0])
-	command.Args = commandWithArgs
-	command.Stderr = e
-	command.Stdout = o
-	command.Stdin = i
-	return command
+	startSession.Args = append(startSession.Args, target)
+	return startSession.CreateCommand(os.Stdin, os.Stdout, os.Stderr).Run()
 }

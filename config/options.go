@@ -10,6 +10,9 @@ type Config struct {
 	InteractiveFilterCommand string
 }
 
+// Conf Config
+var Conf Config
+
 // ListOption stores options for list command
 type ListOption struct {
 	TagKey   string

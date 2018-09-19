@@ -63,13 +63,22 @@ func TestNewListCmd(t *testing.T) {
 	validate(name, expectedTagValueFlagUsage, actualTagValueFlagUsage)
 }
 
+type mockedEc2_1 struct{}
+type mockedEc2_2 struct{}
+
+func (e mockedEc2_1) GetInstances(o config.ListOption) (instances aws.Ec2Instances, err error) {
+	return aws.Ec2Instances{}, nil
+}
+
+func (e mockedEc2_2) GetInstances(o config.ListOption) (instances aws.Ec2Instances, err error) {
+	return nil, errors.New("error")
+}
+
 func TestList_Normal(t *testing.T) {
 	options := config.ListOption{}
-	aFunc := func(o config.ListOption) (instances aws.Ec2Instances, err error) {
-		return aws.Ec2Instances{}, nil
-	}
 
-	err := list(options, aFunc)
+	m := mockedEc2_1{}
+	err := list(options, m)
 	if err != nil {
 		t.Errorf("Error should not be thrown.")
 	}
@@ -77,11 +86,9 @@ func TestList_Normal(t *testing.T) {
 
 func TestList_Error(t *testing.T) {
 	options := config.ListOption{}
-	aFunc := func(o config.ListOption) (instances aws.Ec2Instances, err error) {
-		return nil, errors.New("error")
-	}
 
-	err := list(options, aFunc)
+	m := mockedEc2_2{}
+	err := list(options, m)
 	if err == nil {
 		t.Errorf("Error should be thrown.")
 	}
