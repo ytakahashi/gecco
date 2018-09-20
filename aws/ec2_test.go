@@ -15,10 +15,9 @@ import (
 func TestPrint1(t *testing.T) {
 	buf := &bytes.Buffer{}
 	i := Ec2Instance{
-		instanceID:       "instance id",
-		instanceType:     "instance type",
-		availabilityZone: "az",
-		status:           "status",
+		instanceID:   "instance id",
+		instanceType: "instance type",
+		status:       "status",
 	}
 	instances := Ec2Instances{i}
 
@@ -27,7 +26,6 @@ func TestPrint1(t *testing.T) {
 	expected := fmt.Sprintln(
 		i.instanceID,
 		i.instanceType,
-		i.availabilityZone,
 		i.status,
 		"",
 	)
@@ -41,11 +39,10 @@ func TestPrint1(t *testing.T) {
 func TestPrint2(t *testing.T) {
 	buf := &bytes.Buffer{}
 	i := Ec2Instance{
-		instanceID:       "instance id",
-		instanceType:     "instance type",
-		availabilityZone: "az",
-		status:           "status",
-		tags:             []tag{tag{key: "k", value: "v"}},
+		instanceID:   "instance id",
+		instanceType: "instance type",
+		status:       "status",
+		tags:         []tag{tag{key: "k", value: "v"}},
 	}
 	instances := Ec2Instances{i}
 
@@ -54,7 +51,6 @@ func TestPrint2(t *testing.T) {
 	expected := fmt.Sprintln(
 		i.instanceID,
 		i.instanceType,
-		i.availabilityZone,
 		i.status,
 		"{ k:v }",
 	)
@@ -160,14 +156,6 @@ func TestNew(t *testing.T) {
 
 	if actual.instanceType != "" {
 		t.Errorf("instanceType:\nActual: %v\nExpected: %v", actual.instanceType, "expectedFilterlLength")
-	}
-
-	if actual.availabilityZone != expectedAvailabilityZone {
-		t.Errorf("availabilityZone:\nActual: %v\nExpected: %v", actual.availabilityZone, expectedAvailabilityZone)
-	}
-
-	if actual.privateIPAdress != "" {
-		t.Errorf("privateIPAdress:\nActual: %v\nExpected: %v", actual.privateIPAdress, "expectedFilterlLength")
 	}
 
 	if actual.status != expectedStatus {

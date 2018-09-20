@@ -17,7 +17,7 @@ func newConnectCmd(command iConnectCommand) *cobra.Command {
 		Short: "connect to EC2 instance",
 		Long:  "connect to EC2 instance using 'aws cli start-session' command",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			err = command.initConnectCommand(*connectOpts, aws.Ec2{}, config.Config{})
+			err = command.initConnectCommand(*connectOpts, aws.Ec2{}, &config.Config{})
 			if err != nil {
 				return
 			}

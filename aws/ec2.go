@@ -24,12 +24,10 @@ type tags []tag
 
 // Ec2Instance Ec2Instance
 type Ec2Instance struct {
-	instanceID       string
-	instanceType     string
-	availabilityZone string
-	privateIPAdress  string
-	status           string
-	tags             tags
+	instanceID   string
+	instanceType string
+	status       string
+	tags         tags
 }
 
 func (instances Ec2Instances) toStringSlice() []string {
@@ -99,7 +97,6 @@ func (instances Ec2Instances) Print(w io.Writer) {
 		fmt.Fprintln(w,
 			i.instanceID,
 			i.instanceType,
-			i.availabilityZone,
 			i.status,
 			tag,
 		)
@@ -174,12 +171,6 @@ func newEc2Instance(i ec2.Instance) Ec2Instance {
 		tags = append(tags, tag)
 	}
 
-	var az string
-	p := i.Placement
-	if p != nil {
-		az = aws.StringValue(p.AvailabilityZone)
-	}
-
 	var status string
 	s := i.State
 	if s != nil {
@@ -187,11 +178,9 @@ func newEc2Instance(i ec2.Instance) Ec2Instance {
 	}
 
 	return Ec2Instance{
-		instanceID:       aws.StringValue(i.InstanceId),
-		instanceType:     aws.StringValue(i.InstanceType),
-		availabilityZone: az,
-		privateIPAdress:  aws.StringValue(i.PrivateIpAddress),
-		status:           status,
-		tags:             tags,
+		instanceID:   aws.StringValue(i.InstanceId),
+		instanceType: aws.StringValue(i.InstanceType),
+		status:       status,
+		tags:         tags,
 	}
 }
