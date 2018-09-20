@@ -5,25 +5,27 @@ import (
 	"fmt"
 )
 
-// IOption is an interface for option
+// IOption is an interface for option.
 type IOption interface {
 	IsValid() error
 }
 
-// ListOption stores options for list command
+// ListOption stores options for list command.
 type ListOption struct {
+	Status   string
 	TagKey   string
 	TagValue string
-	Status   string
 }
 
-// ConnectOption stores options for connect command
+// ConnectOption stores options for connect command.
 type ConnectOption struct {
-	Target      string
+	// Target instanceId to connect.
+	Target string
+	// A flag whether to select ec2 interactively.
 	Interactive bool
 }
 
-// IsValid returns nil if optons are valid
+// IsValid validates given options.
 func (option ConnectOption) IsValid() error {
 	if option.Target == "" && option.Interactive == false {
 		return errors.New("Option '--target' or '-i' is required")
@@ -36,7 +38,7 @@ func (option ConnectOption) IsValid() error {
 	return nil
 }
 
-// IsValid returns nil if optons are valid
+// IsValid validates given options.
 func (option ListOption) IsValid() error {
 	if option.Status != "" && !isValidStatus(option.Status) {
 		return fmt.Errorf("Invalid status (%s)", option.Status)

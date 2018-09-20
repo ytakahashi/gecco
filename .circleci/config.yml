@@ -47,4 +47,5 @@ jobs:
             - build-cache-master--
             - build-cache-
       # specify any bash command here prefixed with `run: `
-      - run: go test -v ./...
+      - run: go test -coverprofile=coverage.txt -v ./...
+      - run: bash <(curl -s https://codecov.io/bash)

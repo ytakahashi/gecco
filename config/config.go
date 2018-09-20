@@ -10,13 +10,16 @@ type IConfig interface {
 	GetConfig() Config
 }
 
-// Config file
+// Config stores values read from config file.
 type Config struct {
+	// InteractiveFilterCommand is used when gecco is run with "-i" option.
+	// This holds interactive filter command (like "fzf" ot "peco") as string.
 	InteractiveFilterCommand string
 }
 
-// InitConfig initializes config
-func (c Config) InitConfig() (err error) {
+// InitConfig initializes config object.
+// Config file should be places at "~/.config/" directory.
+func (c *Config) InitConfig() (err error) {
 	viper.SetConfigName("gecco")
 	viper.AddConfigPath("$HOME/.config")
 

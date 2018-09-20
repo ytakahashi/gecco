@@ -75,21 +75,110 @@ func TestRunCommand_Error1(t *testing.T) {
 	err := command.runCommand()
 
 	if err == nil {
-		t.Error("Erroe")
+		t.Error("Error")
 	}
 }
 
-func TestInitConnectCommand(t *testing.T) {
+func TestInitConnectCommand_Normal1(t *testing.T) {
 	opts := config.ConnectOption{
 		Interactive: false,
+		Target:      "foo",
 	}
 
 	command := connectCommand{}
 
-	err := command.initConnectCommand(opts, mockedEc2_3{}, config.Config{})
+	err := command.initConnectCommand(opts, mockedEc2_3{}, &config.Config{})
 
 	if err != nil {
 		t.Errorf("%v", err)
+	}
+
+	if command.option.Interactive == true {
+		t.Error("err")
+	}
+
+	if command.option.Target != "foo" {
+		t.Errorf("error: %v", command.option.Target)
+	}
+
+	if command.interactiveFilterCommand != "" {
+		t.Errorf("error: %v", command.interactiveFilterCommand)
+	}
+
+	if command.command == nil {
+		t.Error("err")
+	}
+}
+
+type mockedConfig1 struct {
+}
+
+func (c *mockedConfig1) InitConfig() (err error) {
+	return nil
+}
+
+func (c mockedConfig1) GetConfig() config.Config {
+	return config.Config{
+		InteractiveFilterCommand: "foo",
+	}
+}
+
+func TestInitConnectCommand_Normal2(t *testing.T) {
+	opts := config.ConnectOption{
+		Interactive: true,
+	}
+
+	command := connectCommand{}
+
+	err := command.initConnectCommand(opts, mockedEc2_3{}, &mockedConfig1{})
+
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
+	if command.option.Interactive == false {
+		t.Error("err")
+	}
+
+	if command.option.Target != "" {
+		t.Errorf("error: %v", command.option.Target)
+	}
+
+	if command.interactiveFilterCommand != "foo" {
+		t.Errorf("error: %v", command.interactiveFilterCommand)
+	}
+
+	if command.command == nil {
+		t.Error("err")
+	}
+}
+
+type mockedConfig2 struct {
+}
+
+func (c mockedConfig2) InitConfig() (err error) {
+	return errors.New("error")
+}
+
+func (c mockedConfig2) GetConfig() config.Config {
+	return config.Config{
+		InteractiveFilterCommand: "foo",
+	}
+}
+
+func TestInitConnectCommand_Error(t *testing.T) {
+	o := config.ConnectOption{
+		Interactive: true,
+	}
+
+	command := &connectCommand{
+		config: &mockedConfig1{},
+	}
+
+	actual := command.initConnectCommand(o, aws.Ec2{}, mockedConfig2{})
+
+	if actual == nil {
+		t.Error("error")
 	}
 }
 
