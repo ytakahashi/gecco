@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -82,7 +81,6 @@ func (c connectCommand) runCommand() (err error) {
 		}
 
 		target, err = instances.GetFilteredInstances(filter)
-		fmt.Println("target", target)
 		if err != nil {
 			return err
 		}
