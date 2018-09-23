@@ -42,7 +42,7 @@ func TestPrint2(t *testing.T) {
 		instanceID:   "instance id",
 		instanceType: "instance type",
 		status:       "status",
-		tags:         []tag{tag{key: "k", value: "v"}},
+		tags:         []tag{{key: "k", value: "v"}},
 	}
 	instances := Ec2Instances{i}
 
@@ -52,7 +52,7 @@ func TestPrint2(t *testing.T) {
 		i.instanceID,
 		i.instanceType,
 		i.status,
-		"{ k:v }",
+		"[{\"k\": \"v\"}]",
 	)
 	actual := buf.String()
 

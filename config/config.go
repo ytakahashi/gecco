@@ -18,7 +18,7 @@ type Config struct {
 }
 
 // InitConfig initializes config object.
-// Config file should be places at "~/.config/" directory.
+// Config file should be placed at "~/.config/" directory.
 func (c *Config) InitConfig() (err error) {
 	viper.SetConfigName("gecco")
 	viper.AddConfigPath("$HOME/.config")

@@ -1,6 +1,8 @@
 # gecco
 
 [![CircleCI](https://circleci.com/gh/ytakahashi/gecco.svg?style=shield&circle-token=262d744aaef58be4ebb8ba75d6d4f2d8c0b2c14a)](https://circleci.com/gh/ytakahashi/gecco)
+[![codecov](https://codecov.io/gh/ytakahashi/gecco/branch/master/graph/badge.svg)](https://codecov.io/gh/ytakahashi/gecco)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ytakahashi/gecco)](https://goreportcard.com/report/github.com/ytakahashi/gecco)
 
 Gecce is a command line tool to operate AWS EC2.
 
@@ -39,13 +41,13 @@ Listed information contains instanceId, instance size, instance status, and tags
 
 **Note:** Following requirements should be satisfied when using this command.
 
-- AWS cli version 1.16.12 or above should be installed.
-- EC2 instances to be connected must be running the SSM Agent version 2.3.12 or above.
+- AWS cli version 1.16.12 or above is installed.
+- EC2 instance to be connected is running the SSM Agent version 2.3.12 or above.
 
 #### options (connect)
 
 - `--target`: connect to the specified instance.
-- `--interactive`/`-i`: if this option is specified, select an EC2 instance to connect interactively. When using this option, config file (`gecco.yml` or `gecco.toml`) is required at `~/.config/` directory and available interactive filtering command ([fzf](https://github.com/junegunn/fzf) or [peco](https://github.com/peco/peco)) should be provided.
+- `--interactive`/`-i`: select an EC2 instance to connect interactively. When using this option, config file (`gecco.yml` or `gecco.toml`) is required at `~/.config/` directory and available interactive filtering command (e.g., [fzf](https://github.com/junegunn/fzf) and [peco](https://github.com/peco/peco)) should be provided.
 
 Example of config file:
 
