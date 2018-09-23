@@ -20,7 +20,23 @@ type tag struct {
 	value string
 }
 
+func (t tag) toString() string {
+	return "{\"" + t.key + "\": \"" + t.value + "\"}"
+}
+
 type tags []tag
+
+func (tags tags) toString() (str string) {
+	if len(tags) > 0 {
+		str = "["
+		for _, t := range tags {
+			str += t.toString() + ", "
+		}
+		str = strings.TrimRight(str, ", ")
+		str += "]"
+	}
+	return
+}
 
 // Ec2Instance Ec2Instance
 type Ec2Instance struct {
@@ -29,17 +45,6 @@ type Ec2Instance struct {
 	status       string
 	tags         tags
 }
-
-func (instances Ec2Instances) toStringSlice() []string {
-	sl := make([]string, 0)
-	for _, i := range instances {
-		sl = append(sl, i.instanceID)
-	}
-	return sl
-}
-
-// Ec2Instances contains EC2 instance info
-type Ec2Instances []Ec2Instance
 
 // Ec2 contains EC2 instance info
 type Ec2 struct{}
@@ -82,23 +87,25 @@ type Instances interface {
 	GetFilteredInstances(ext.ICommand) (string, error)
 }
 
+// Ec2Instances contains EC2 instance info
+type Ec2Instances []Ec2Instance
+
+func (instances Ec2Instances) toStringSlice() []string {
+	sl := make([]string, 0)
+	for _, i := range instances {
+		sl = append(sl, i.instanceID+",Tags="+i.tags.toString())
+	}
+	return sl
+}
+
 // Print instances
 func (instances Ec2Instances) Print(w io.Writer) {
 	for _, i := range instances {
-		var tag string
-		if len(i.tags) > 0 {
-			tag = "{ "
-			for _, t := range i.tags {
-				tag += t.key + ":" + t.value + " "
-			}
-			tag += "}"
-		}
-
 		fmt.Fprintln(w,
 			i.instanceID,
 			i.instanceType,
 			i.status,
-			tag,
+			i.tags.toString(),
 		)
 	}
 }
@@ -124,6 +131,7 @@ func (instances Ec2Instances) GetFilteredInstances(filter ext.ICommand) (selecte
 	}
 
 	selected = strings.TrimSpace(buf.String())
+	selected = strings.Split(selected, ",")[0]
 	return
 }
 
