@@ -71,7 +71,7 @@ func (c connectCommand) runCommand() (err error) {
 
 	var target string
 	if c.option.Interactive {
-		instances, err := c.ec2Client.GetInstances(config.ListOption{})
+		instances, err := c.ec2Client.GetInstances(config.ListOption{}, aws.Ec2Service{})
 		if err != nil {
 			return err
 		}

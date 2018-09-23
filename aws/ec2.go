@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/ytakahashi/gecco/config"
@@ -38,6 +39,22 @@ func (tags tags) toString() (str string) {
 	return
 }
 
+// IAwsService is an interface for Aws services
+type IAwsService interface {
+	initEc2Service() *ec2.EC2
+}
+
+// Ec2Service Ec2 Service
+type Ec2Service struct{}
+
+func (s Ec2Service) initEc2Service() *ec2.EC2 {
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+
+	return ec2.New(sess)
+}
+
 // Ec2Instance Ec2Instance
 type Ec2Instance struct {
 	instanceID   string
@@ -51,16 +68,66 @@ type Ec2 struct{}
 
 // Ec2Client Ec2 Client
 type Ec2Client interface {
-	GetInstances(config.ListOption) (Ec2Instances, error)
+	GetInstances(config.ListOption, IAwsService) (Ec2Instances, error)
+	StartInstance(string, IAwsService) error
+	StopInstance(string, IAwsService) error
+}
+
+// StartInstance starts target instance
+func (e Ec2) StartInstance(target string, service IAwsService) error {
+	ec2Svc := service.initEc2Service()
+
+	input := &ec2.StartInstancesInput{
+		InstanceIds: []*string{
+			aws.String(target),
+		},
+		DryRun: aws.Bool(true),
+	}
+	result, err := ec2Svc.StartInstances(input)
+	awsErr, ok := err.(awserr.Error)
+
+	if ok && awsErr.Code() == "DryRunOperation" {
+		input.DryRun = aws.Bool(false)
+		result, err = ec2Svc.StartInstances(input)
+		if err != nil {
+			return err
+		}
+		fmt.Println("Success", result.StartingInstances)
+		return nil
+
+	}
+	return err
+}
+
+// StopInstance stops target instance
+func (e Ec2) StopInstance(target string, service IAwsService) error {
+	ec2Svc := service.initEc2Service()
+
+	input := &ec2.StopInstancesInput{
+		InstanceIds: []*string{
+			aws.String(target),
+		},
+		DryRun: aws.Bool(true),
+	}
+	result, err := ec2Svc.StopInstances(input)
+	awsErr, ok := err.(awserr.Error)
+
+	if ok && awsErr.Code() == "DryRunOperation" {
+		input.DryRun = aws.Bool(false)
+		result, err = ec2Svc.StopInstances(input)
+		if err != nil {
+			return err
+		}
+		fmt.Println("Success", result.StoppingInstances)
+		return nil
+
+	}
+	return err
 }
 
 // GetInstances Get Instances
-func (e Ec2) GetInstances(options config.ListOption) (instances Ec2Instances, err error) {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
-
-	ec2Svc := ec2.New(sess)
+func (e Ec2) GetInstances(options config.ListOption, service IAwsService) (instances Ec2Instances, err error) {
+	ec2Svc := service.initEc2Service()
 
 	input := createInput(options)
 

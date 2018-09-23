@@ -50,7 +50,7 @@ func (c listCommand) runCommand() (err error) {
 		return err
 	}
 
-	instances, err := c.ec2Client.GetInstances(options)
+	instances, err := c.ec2Client.GetInstances(options, aws.Ec2Service{})
 	if err != nil {
 		return err
 	}

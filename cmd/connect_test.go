@@ -184,8 +184,16 @@ func TestInitConnectCommand_Error(t *testing.T) {
 
 type mockedEc2_3 struct{}
 
-func (e mockedEc2_3) GetInstances(options config.ListOption) (instances aws.Ec2Instances, err error) {
+func (e mockedEc2_3) GetInstances(options config.ListOption, s aws.IAwsService) (instances aws.Ec2Instances, err error) {
 	return nil, errors.New("error")
+}
+
+func (e mockedEc2_3) StartInstance(target string, s aws.IAwsService) error {
+	return nil
+}
+
+func (e mockedEc2_3) StopInstance(target string, s aws.IAwsService) error {
+	return nil
 }
 
 func TestRunCommand_Error2(t *testing.T) {
@@ -206,8 +214,16 @@ func TestRunCommand_Error2(t *testing.T) {
 
 type mockedEc2_4 struct{}
 
-func (e mockedEc2_4) GetInstances(options config.ListOption) (instances aws.Ec2Instances, err error) {
+func (e mockedEc2_4) GetInstances(options config.ListOption, s aws.IAwsService) (instances aws.Ec2Instances, err error) {
 	return aws.Ec2Instances{}, nil
+}
+
+func (e mockedEc2_4) StartInstance(target string, s aws.IAwsService) error {
+	return nil
+}
+
+func (e mockedEc2_4) StopInstance(target string, s aws.IAwsService) error {
+	return nil
 }
 
 func TestRunCommand_Normal1(t *testing.T) {
