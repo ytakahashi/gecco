@@ -12,7 +12,7 @@ import (
 type mockedConnectCommand1 struct {
 }
 
-func (c *mockedConnectCommand1) initConnectCommand(o config.ConnectOption, client aws.Ec2Client, conf config.IConfig) (err error) {
+func (c *mockedConnectCommand1) initConnectCommand(o config.TargetOption, client aws.Ec2Client, conf config.IConfig) (err error) {
 	return
 }
 
@@ -64,7 +64,7 @@ func TestNewConnectCmd(t *testing.T) {
 }
 
 func TestRunCommand_Error1(t *testing.T) {
-	opts := config.ConnectOption{
+	opts := config.TargetOption{
 		Target:      "foo",
 		Interactive: true,
 	}
@@ -80,7 +80,7 @@ func TestRunCommand_Error1(t *testing.T) {
 }
 
 func TestInitConnectCommand_Normal1(t *testing.T) {
-	opts := config.ConnectOption{
+	opts := config.TargetOption{
 		Interactive: false,
 		Target:      "foo",
 	}
@@ -124,7 +124,7 @@ func (c mockedConfig1) GetConfig() config.Config {
 }
 
 func TestInitConnectCommand_Normal2(t *testing.T) {
-	opts := config.ConnectOption{
+	opts := config.TargetOption{
 		Interactive: true,
 	}
 
@@ -167,7 +167,7 @@ func (c mockedConfig2) GetConfig() config.Config {
 }
 
 func TestInitConnectCommand_Error(t *testing.T) {
-	o := config.ConnectOption{
+	o := config.TargetOption{
 		Interactive: true,
 	}
 
@@ -184,7 +184,7 @@ func TestInitConnectCommand_Error(t *testing.T) {
 
 type mockedEc2_3 struct{}
 
-func (e mockedEc2_3) GetInstances(options config.ListOption, s aws.IAwsService) (instances aws.Ec2Instances, err error) {
+func (e mockedEc2_3) GetInstances(options config.FilterOption, s aws.IAwsService) (instances aws.Ec2Instances, err error) {
 	return nil, errors.New("error")
 }
 
@@ -197,7 +197,7 @@ func (e mockedEc2_3) StopInstance(target string, s aws.IAwsService) error {
 }
 
 func TestRunCommand_Error2(t *testing.T) {
-	opts := config.ConnectOption{
+	opts := config.TargetOption{
 		Interactive: true,
 	}
 	command := connectCommand{
@@ -214,7 +214,7 @@ func TestRunCommand_Error2(t *testing.T) {
 
 type mockedEc2_4 struct{}
 
-func (e mockedEc2_4) GetInstances(options config.ListOption, s aws.IAwsService) (instances aws.Ec2Instances, err error) {
+func (e mockedEc2_4) GetInstances(options config.FilterOption, s aws.IAwsService) (instances aws.Ec2Instances, err error) {
 	return aws.Ec2Instances{}, nil
 }
 
@@ -227,7 +227,7 @@ func (e mockedEc2_4) StopInstance(target string, s aws.IAwsService) error {
 }
 
 func TestRunCommand_Normal1(t *testing.T) {
-	opts := config.ConnectOption{
+	opts := config.TargetOption{
 		Interactive: true,
 	}
 	command := connectCommand{
@@ -248,7 +248,7 @@ func TestRunCommand_Normal1(t *testing.T) {
 }
 
 func TestRunCommand_Normal2(t *testing.T) {
-	opts := config.ConnectOption{
+	opts := config.TargetOption{
 		Target:      "foo",
 		Interactive: false,
 	}

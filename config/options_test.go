@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestConnectOption_IsValid_Error1(t *testing.T) {
-	c := ConnectOption{}
+func TestTargetOption_IsValid_Error1(t *testing.T) {
+	c := TargetOption{}
 	expected := "Option '--target' or '-i' is required"
 	actual := c.IsValid()
 
@@ -19,8 +19,8 @@ func TestConnectOption_IsValid_Error1(t *testing.T) {
 	}
 }
 
-func TestConnectOption_IsValid_Error2(t *testing.T) {
-	c := ConnectOption{
+func TestTargetOption_IsValid_Error2(t *testing.T) {
+	c := TargetOption{
 		Target:      "foo",
 		Interactive: true,
 	}
@@ -36,8 +36,8 @@ func TestConnectOption_IsValid_Error2(t *testing.T) {
 	}
 }
 
-func TestConnectOption_IsValid_Ok(t *testing.T) {
-	c := ConnectOption{
+func TestTargetOption_IsValid_Ok(t *testing.T) {
+	c := TargetOption{
 		Interactive: true,
 	}
 
@@ -49,7 +49,7 @@ func TestConnectOption_IsValid_Ok(t *testing.T) {
 }
 
 func TestIsValid_One(t *testing.T) {
-	options := ListOption{}
+	options := FilterOption{}
 
 	actual := options.IsValid()
 
@@ -60,7 +60,7 @@ func TestIsValid_One(t *testing.T) {
 
 func TestIsValid_InvalidStatus(t *testing.T) {
 	status := "foo"
-	options := ListOption{Status: status}
+	options := FilterOption{Status: status}
 
 	expected := fmt.Sprintf("Invalid status (%v)", status)
 	actual := options.IsValid()
@@ -76,7 +76,7 @@ func TestIsValid_InvalidStatus(t *testing.T) {
 
 func TestIsValid_InvalidTags1(t *testing.T) {
 	tagKey := "foo"
-	options := ListOption{TagKey: tagKey}
+	options := FilterOption{TagKey: tagKey}
 
 	expected := "Option '--tagValue' is required when '--tagKey' is specified"
 	actual := options.IsValid()
@@ -92,7 +92,7 @@ func TestIsValid_InvalidTags1(t *testing.T) {
 
 func TestIsValid_InvalidTags2(t *testing.T) {
 	tagValue := "foo"
-	options := ListOption{TagValue: tagValue}
+	options := FilterOption{TagValue: tagValue}
 
 	expected := "Option '--tagKey' is required when '--tagValue' is specified"
 	actual := options.IsValid()

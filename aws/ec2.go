@@ -68,7 +68,7 @@ type Ec2 struct{}
 
 // Ec2Client Ec2 Client
 type Ec2Client interface {
-	GetInstances(config.ListOption, IAwsService) (Ec2Instances, error)
+	GetInstances(config.FilterOption, IAwsService) (Ec2Instances, error)
 	StartInstance(string, IAwsService) error
 	StopInstance(string, IAwsService) error
 }
@@ -92,7 +92,7 @@ func (e Ec2) StartInstance(target string, service IAwsService) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println("Success", result.StartingInstances)
+		fmt.Println("Success:", result.StartingInstances)
 		return nil
 
 	}
@@ -118,7 +118,7 @@ func (e Ec2) StopInstance(target string, service IAwsService) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println("Success", result.StoppingInstances)
+		fmt.Println("Success:", result.StoppingInstances)
 		return nil
 
 	}
@@ -126,7 +126,7 @@ func (e Ec2) StopInstance(target string, service IAwsService) error {
 }
 
 // GetInstances Get Instances
-func (e Ec2) GetInstances(options config.ListOption, service IAwsService) (instances Ec2Instances, err error) {
+func (e Ec2) GetInstances(options config.FilterOption, service IAwsService) (instances Ec2Instances, err error) {
 	ec2Svc := service.initEc2Service()
 
 	input := createInput(options)
@@ -202,7 +202,7 @@ func (instances Ec2Instances) GetFilteredInstances(filter ext.ICommand) (selecte
 	return
 }
 
-func createInput(options config.ListOption) ec2.DescribeInstancesInput {
+func createInput(options config.FilterOption) ec2.DescribeInstancesInput {
 	filters := make([]*ec2.Filter, 0)
 
 	if options.Status != "" {

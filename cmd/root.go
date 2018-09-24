@@ -18,6 +18,8 @@ func newRootCmd() *cobra.Command {
 
 	rootCmd.AddCommand(newListCmd(&listCommand{}))
 	rootCmd.AddCommand(newConnectCmd(&connectCommand{}))
+	rootCmd.AddCommand(newStartCmd(&stateCommand{}))
+	rootCmd.AddCommand(newStopCmd(&stateCommand{}))
 
 	return rootCmd
 }

@@ -10,23 +10,23 @@ type IOption interface {
 	IsValid() error
 }
 
-// ListOption stores options for list command.
-type ListOption struct {
+// FilterOption stores options for list command.
+type FilterOption struct {
 	Status   string
 	TagKey   string
 	TagValue string
 }
 
-// ConnectOption stores options for connect command.
-type ConnectOption struct {
-	// Target instanceId to connect.
+// TargetOption stores options for connect/start/stop command.
+type TargetOption struct {
+	// Target instanceId.
 	Target string
 	// A flag whether to select ec2 interactively.
 	Interactive bool
 }
 
 // IsValid validates given options.
-func (option ConnectOption) IsValid() error {
+func (option TargetOption) IsValid() error {
 	if option.Target == "" && option.Interactive == false {
 		return errors.New("Option '--target' or '-i' is required")
 	}
@@ -39,7 +39,7 @@ func (option ConnectOption) IsValid() error {
 }
 
 // IsValid validates given options.
-func (option ListOption) IsValid() error {
+func (option FilterOption) IsValid() error {
 	if option.Status != "" && !isValidStatus(option.Status) {
 		return fmt.Errorf("Invalid status (%s)", option.Status)
 	}

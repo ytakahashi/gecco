@@ -9,7 +9,7 @@ import (
 )
 
 func newListCmd(command iListCommand) *cobra.Command {
-	listOpts := &config.ListOption{}
+	listOpts := &config.FilterOption{}
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "lists EC2 instances",
@@ -28,16 +28,16 @@ func newListCmd(command iListCommand) *cobra.Command {
 }
 
 type iListCommand interface {
-	initListCommand(config.ListOption, aws.Ec2Client)
+	initListCommand(config.FilterOption, aws.Ec2Client)
 	runCommand() error
 }
 
 type listCommand struct {
-	options   config.ListOption
+	options   config.FilterOption
 	ec2Client aws.Ec2Client
 }
 
-func (c *listCommand) initListCommand(o config.ListOption, client aws.Ec2Client) {
+func (c *listCommand) initListCommand(o config.FilterOption, client aws.Ec2Client) {
 	c.ec2Client = client
 	c.options = o
 }

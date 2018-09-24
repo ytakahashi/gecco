@@ -9,7 +9,7 @@ import (
 	"github.com/ytakahashi/gecco/ext"
 )
 
-var connectOpts = &config.ConnectOption{}
+var connectOpts = &config.TargetOption{}
 
 func newConnectCmd(command iConnectCommand) *cobra.Command {
 	connectCmd := &cobra.Command{
@@ -21,8 +21,7 @@ func newConnectCmd(command iConnectCommand) *cobra.Command {
 			if err != nil {
 				return
 			}
-			err = command.runCommand()
-			return
+			return command.runCommand()
 		},
 	}
 
@@ -33,19 +32,19 @@ func newConnectCmd(command iConnectCommand) *cobra.Command {
 }
 
 type iConnectCommand interface {
-	initConnectCommand(config.ConnectOption, aws.Ec2Client, config.IConfig) error
+	initConnectCommand(config.TargetOption, aws.Ec2Client, config.IConfig) error
 	runCommand() error
 }
 
 type connectCommand struct {
-	option                   config.ConnectOption
+	option                   config.TargetOption
 	ec2Client                aws.Ec2Client
 	interactiveFilterCommand string
 	command                  ext.ICommand
 	config                   config.IConfig
 }
 
-func (c *connectCommand) initConnectCommand(o config.ConnectOption, client aws.Ec2Client, conf config.IConfig) (err error) {
+func (c *connectCommand) initConnectCommand(o config.TargetOption, client aws.Ec2Client, conf config.IConfig) (err error) {
 	c.ec2Client = client
 	c.option = o
 
@@ -64,28 +63,14 @@ func (c *connectCommand) initConnectCommand(o config.ConnectOption, client aws.E
 	return
 }
 
-func (c connectCommand) runCommand() (err error) {
-	if err = c.option.IsValid(); err != nil {
+func (c connectCommand) runCommand() error {
+	if err := c.option.IsValid(); err != nil {
 		return err
 	}
 
-	var target string
-	if c.option.Interactive {
-		instances, err := c.ec2Client.GetInstances(config.ListOption{}, aws.Ec2Service{})
-		if err != nil {
-			return err
-		}
-
-		filter := ext.Command{
-			Args: []string{c.interactiveFilterCommand},
-		}
-
-		target, err = instances.GetFilteredInstances(filter)
-		if err != nil {
-			return err
-		}
-	} else {
-		target = c.option.Target
+	target, err := getTarget(c.option, c.ec2Client, c.interactiveFilterCommand)
+	if err != nil {
+		return err
 	}
 
 	startSession.Args = append(startSession.Args, target)
@@ -94,4 +79,21 @@ func (c connectCommand) runCommand() (err error) {
 
 var startSession = ext.Command{
 	Args: []string{"aws", "ssm", "start-session", "--target"},
+}
+
+func getTarget(opts config.TargetOption, client aws.Ec2Client, filterCommand string) (string, error) {
+	if opts.Interactive {
+		instances, err := client.GetInstances(config.FilterOption{}, aws.Ec2Service{})
+		if err != nil {
+			return "", err
+		}
+
+		filter := ext.Command{
+			Args: []string{filterCommand},
+		}
+
+		return instances.GetFilteredInstances(filter)
+	}
+
+	return opts.Target, nil
 }

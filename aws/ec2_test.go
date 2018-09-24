@@ -62,7 +62,7 @@ func TestPrint2(t *testing.T) {
 }
 
 func TestCreateInput1(t *testing.T) {
-	options := config.ListOption{}
+	options := config.FilterOption{}
 
 	input := createInput(options)
 
@@ -85,7 +85,7 @@ func TestCreateInput1(t *testing.T) {
 }
 
 func TestCreateInput2(t *testing.T) {
-	options := config.ListOption{
+	options := config.FilterOption{
 		Status:   "foo",
 		TagKey:   "k",
 		TagValue: "v",
