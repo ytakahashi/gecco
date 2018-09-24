@@ -2,17 +2,167 @@ package aws
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/ytakahashi/gecco/config"
 )
 
-func TestPrint1(t *testing.T) {
+type mockedEc2Service1 struct{}
+
+func (s mockedEc2Service1) initEc2Service() *ec2.EC2 {
+	return &ec2.EC2{}
+}
+
+func (s mockedEc2Service1) start(ec2Svc *ec2.EC2, dryRun bool, instanceID string) (*ec2.StartInstancesOutput, error) {
+	if dryRun {
+		return nil, errors.New("error")
+	}
+	result := &ec2.StartInstancesOutput{
+		StartingInstances: []*ec2.InstanceStateChange{},
+	}
+
+	return result, nil
+}
+
+func (s mockedEc2Service1) stop(ec2Svc *ec2.EC2, dryRun bool, instanceID string) (*ec2.StopInstancesOutput, error) {
+	if dryRun {
+		return nil, errors.New("error")
+	}
+
+	result := &ec2.StopInstancesOutput{
+		StoppingInstances: []*ec2.InstanceStateChange{},
+	}
+
+	return result, nil
+}
+
+func (s mockedEc2Service1) handleError(err error) bool {
+	return true
+}
+
+type mockedEc2Service2 struct{}
+
+func (s mockedEc2Service2) initEc2Service() *ec2.EC2 {
+	return &ec2.EC2{}
+}
+
+func (s mockedEc2Service2) start(ec2Svc *ec2.EC2, dryRun bool, instanceID string) (*ec2.StartInstancesOutput, error) {
+	if dryRun {
+		return nil, errors.New("error")
+	}
+	result := &ec2.StartInstancesOutput{
+		StartingInstances: []*ec2.InstanceStateChange{},
+	}
+
+	return result, nil
+}
+
+func (s mockedEc2Service2) stop(ec2Svc *ec2.EC2, dryRun bool, instanceID string) (*ec2.StopInstancesOutput, error) {
+	if dryRun {
+		return nil, errors.New("error")
+	}
+
+	result := &ec2.StopInstancesOutput{
+		StoppingInstances: []*ec2.InstanceStateChange{},
+	}
+
+	return result, nil
+}
+
+func (s mockedEc2Service2) handleError(err error) bool {
+	return false
+}
+
+type mockedEc2Service3 struct{}
+
+func (s mockedEc2Service3) initEc2Service() *ec2.EC2 {
+	return &ec2.EC2{}
+}
+
+func (s mockedEc2Service3) start(ec2Svc *ec2.EC2, dryRun bool, instanceID string) (*ec2.StartInstancesOutput, error) {
+	return nil, errors.New("error")
+
+}
+
+func (s mockedEc2Service3) stop(ec2Svc *ec2.EC2, dryRun bool, instanceID string) (*ec2.StopInstancesOutput, error) {
+	return nil, errors.New("error")
+}
+
+func (s mockedEc2Service3) handleError(err error) bool {
+	return true
+}
+
+func Test_Ec2Client_StartInstance_Normal(t *testing.T) {
+	sut := Ec2{}
+	target := ""
+	svc := mockedEc2Service1{}
+
+	actual := sut.StartInstance(target, svc)
+	if actual != nil {
+		t.Errorf("err: %v", actual)
+	}
+}
+
+func Test_Ec2Client_StartInstance_Error1(t *testing.T) {
+	sut := Ec2{}
+	target := ""
+	svc := mockedEc2Service2{}
+
+	actual := sut.StartInstance(target, svc)
+	if actual == nil {
+		t.Errorf("err: %v", actual)
+	}
+}
+
+func Test_Ec2Client_StartInstance_Error2(t *testing.T) {
+	sut := Ec2{}
+	target := ""
+	svc := mockedEc2Service3{}
+
+	actual := sut.StartInstance(target, svc)
+	if actual == nil {
+		t.Errorf("err: %v", actual)
+	}
+}
+
+func Test_Ec2Client_StopInstance_Normal(t *testing.T) {
+	sut := Ec2{}
+	target := ""
+	svc := mockedEc2Service1{}
+
+	actual := sut.StopInstance(target, svc)
+	if actual != nil {
+		t.Errorf("err: %v", actual)
+	}
+}
+
+func Test_Ec2Client_StopInstance_Error1(t *testing.T) {
+	sut := Ec2{}
+	target := ""
+	svc := mockedEc2Service2{}
+
+	actual := sut.StopInstance(target, svc)
+	if actual == nil {
+		t.Errorf("err: %v", actual)
+	}
+}
+
+func Test_Ec2Client_StopInstance_Error2(t *testing.T) {
+	sut := Ec2{}
+	target := ""
+	svc := mockedEc2Service3{}
+
+	actual := sut.StopInstance(target, svc)
+	if actual == nil {
+		t.Errorf("err: %v", actual)
+	}
+}
+
+func Test_Ec2Instances_Print1(t *testing.T) {
 	buf := &bytes.Buffer{}
 	i := Ec2Instance{
 		instanceID:   "instance id",
@@ -36,7 +186,7 @@ func TestPrint1(t *testing.T) {
 	}
 }
 
-func TestPrint2(t *testing.T) {
+func Test_Ec2Instances_Print2(t *testing.T) {
 	buf := &bytes.Buffer{}
 	i := Ec2Instance{
 		instanceID:   "instance id",
@@ -58,122 +208,6 @@ func TestPrint2(t *testing.T) {
 
 	if expected != actual {
 		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
-	}
-}
-
-func TestCreateInput1(t *testing.T) {
-	options := config.FilterOption{}
-
-	input := createInput(options)
-
-	filters := input.Filters
-
-	expectedLength := 1
-	actualLength := len(filters)
-
-	if actualLength != expectedLength {
-		t.Errorf("Number of filters should not be '%v'", actualLength)
-	}
-
-	expectedFilterName := "instance-state-name"
-	actualFilterName := filters[0].Name
-
-	actualFilterValues := filters[0].Values
-	actualFilterlLength := len(actualFilterValues)
-
-	validateFilter(expectedFilterName, aws.StringValue(actualFilterName), actualFilterlLength, 6, t)
-}
-
-func TestCreateInput2(t *testing.T) {
-	options := config.FilterOption{
-		Status:   "foo",
-		TagKey:   "k",
-		TagValue: "v",
-	}
-
-	input := createInput(options)
-
-	filters := input.Filters
-
-	expectedLength := 2
-	actualLength := len(filters)
-
-	if actualLength != expectedLength {
-		t.Errorf("Number of filters should not be '%v'", actualLength)
-	}
-
-	expectedFilterName0 := "instance-state-name"
-	actualFilterName0 := filters[0].Name
-
-	actualFilterValues0 := filters[0].Values
-	actuaFilterlLength0 := len(actualFilterValues0)
-
-	validateFilter(expectedFilterName0, aws.StringValue(actualFilterName0), actuaFilterlLength0, 1, t)
-
-	expectedFilterName1 := "tag:" + options.TagKey
-	actualFilterName1 := filters[1].Name
-
-	actualFilterValues1 := filters[1].Values
-	actuaFilterlLength1 := len(actualFilterValues1)
-
-	validateFilter(expectedFilterName1, aws.StringValue(actualFilterName1), actuaFilterlLength1, 1, t)
-
-}
-
-func validateFilter(expectedFilterName, actualFilterName string, expectedFilterlLength, actualFilterlLength int, t *testing.T) {
-	if actualFilterName != expectedFilterName {
-		t.Errorf("Filter name mismatch:\nActual: %v\nExpected: %v", actualFilterName, expectedFilterName)
-	}
-
-	if actualFilterlLength != expectedFilterlLength {
-		t.Errorf("Invalid number of filters:\nActual: %v\nExpected: %v", actualFilterlLength, expectedFilterlLength)
-	}
-}
-
-func TestNew(t *testing.T) {
-	i := ec2.Instance{}
-
-	ta := ec2.Tag{}
-	ta.SetKey("k").SetValue("v")
-	tags := []*ec2.Tag{&ta}
-
-	expectedAvailabilityZone := "zone 1"
-	p := ec2.Placement{}
-	p.SetAvailabilityZone(expectedAvailabilityZone)
-
-	expectedStatus := "state name"
-	s := ec2.InstanceState{}
-	s.SetName(expectedStatus)
-
-	expectedInstanceID := "id"
-	i.SetInstanceId(expectedInstanceID).SetTags(tags).SetPlacement(&p).SetState(&s)
-
-	actual := newEc2Instance(i)
-
-	if actual.instanceID != expectedInstanceID {
-		t.Errorf("InstanceID:\nActual: %v\nExpected: %v", actual.instanceID, expectedInstanceID)
-	}
-
-	if actual.instanceType != "" {
-		t.Errorf("instanceType:\nActual: %v\nExpected: %v", actual.instanceType, "expectedFilterlLength")
-	}
-
-	if actual.status != expectedStatus {
-		t.Errorf("status:\nActual: %v\nExpected: %v", actual.status, expectedStatus)
-	}
-
-	if len(actual.tags) > 1 {
-		t.Errorf("Error")
-	}
-
-	key := "k"
-	if actual.tags[0].key != key {
-		t.Errorf("tag key:\nActual: %v\nExpected: %v", actual.tags[0].key, key)
-	}
-
-	val := "v"
-	if actual.tags[0].value != val {
-		t.Errorf("tag value:\nActual: %v\nExpected: %v", actual.tags[0].value, val)
 	}
 }
 
