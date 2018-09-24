@@ -14,7 +14,7 @@ func (c mockedListCommand1) runCommand() error {
 	return nil
 }
 
-func (c mockedListCommand1) initListCommand(o config.ListOption, client aws.Ec2Client) {
+func (c mockedListCommand1) initListCommand(o config.FilterOption, client aws.Ec2Client) {
 }
 
 func TestNewListCmd(t *testing.T) {
@@ -79,18 +79,34 @@ func TestNewListCmd(t *testing.T) {
 
 type mockedEc2_1 struct{}
 
-func (e mockedEc2_1) GetInstances(o config.ListOption) (instances aws.Ec2Instances, err error) {
+func (e mockedEc2_1) GetInstances(o config.FilterOption, s aws.IEc2Service) (instances aws.Ec2Instances, err error) {
 	return aws.Ec2Instances{}, nil
+}
+
+func (e mockedEc2_1) StartInstance(target string, s aws.IEc2Service) error {
+	return nil
+}
+
+func (e mockedEc2_1) StopInstance(target string, s aws.IEc2Service) error {
+	return nil
 }
 
 type mockedEc2_2 struct{}
 
-func (e mockedEc2_2) GetInstances(o config.ListOption) (instances aws.Ec2Instances, err error) {
+func (e mockedEc2_2) GetInstances(o config.FilterOption, s aws.IEc2Service) (instances aws.Ec2Instances, err error) {
 	return nil, errors.New("error")
 }
 
-func TestInitListCommand(t *testing.T) {
-	o := config.ListOption{
+func (e mockedEc2_2) StartInstance(target string, s aws.IEc2Service) error {
+	return nil
+}
+
+func (e mockedEc2_2) StopInstance(target string, s aws.IEc2Service) error {
+	return nil
+}
+
+func Test_ListCommand_InitListCommand(t *testing.T) {
+	o := config.FilterOption{
 		Status: "status",
 	}
 	sut := listCommand{}
@@ -105,9 +121,9 @@ func TestInitListCommand(t *testing.T) {
 	}
 }
 
-func TestRunCommand1(t *testing.T) {
+func Test_ListCommand_RunCommand1(t *testing.T) {
 	sut := listCommand{
-		options: config.ListOption{Status: "foo"},
+		options: config.FilterOption{Status: "foo"},
 	}
 
 	err := sut.runCommand()
@@ -117,9 +133,9 @@ func TestRunCommand1(t *testing.T) {
 	}
 }
 
-func TestRunCommand2(t *testing.T) {
+func Test_ListCommand_RunCommand2(t *testing.T) {
 	sut := listCommand{
-		options:   config.ListOption{},
+		options:   config.FilterOption{},
 		ec2Client: mockedEc2_2{},
 	}
 
@@ -130,9 +146,9 @@ func TestRunCommand2(t *testing.T) {
 	}
 }
 
-func TestRunCommand3(t *testing.T) {
+func Test_ListCommand_RunCommand3(t *testing.T) {
 	sut := listCommand{
-		options:   config.ListOption{},
+		options:   config.FilterOption{},
 		ec2Client: mockedEc2_1{},
 	}
 

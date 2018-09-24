@@ -6,6 +6,8 @@
 
 Gecce is a command line tool to operate AWS EC2.
 
+![gecco](https://user-images.githubusercontent.com/26239560/45939940-1c811a00-c011-11e8-9f85-90c7d76d6733.gif)
+
 ## Requirement
 
 Aws credential should be provided with shared config file (`~/.aws/config`) or shared credentials file (`~/.aws/credentials`).
@@ -23,6 +25,8 @@ Available Commands:
   connect     connect to EC2 instance
   help        Help about any command
   list        lists EC2 instances
+  start       start specified EC2 instance
+  stop        stop specified EC2 instance
 ```
 
 ### list
@@ -35,9 +39,20 @@ Listed information contains instanceId, instance size, instance status, and tags
 - `--status`: only lists instances of specified status.
 - `--tagKey`, `--tagValue`: only lists instances which have specified tag.
 
+### start/stop
+
+`gecco start` command starts/stops EC2 instance.  
+Target EC2 instance is provided by option `--target` or `-i/--interactive`.  
+
+#### options (start/stop)
+
+- `--target`: connect to the specified instance.
+- `--interactive`/`-i`: select an EC2 instance to connect interactively. When using this option, [config file](#config-file) is required.
+
 ### connect
 
 `gecco connect` connects to EC2 instances using `ssm start-session` command.  
+Target EC2 instance is provided by option `--target` or `-i/--interactive`.  
 
 **Note:** Following requirements should be satisfied when using this command.
 
@@ -47,7 +62,12 @@ Listed information contains instanceId, instance size, instance status, and tags
 #### options (connect)
 
 - `--target`: connect to the specified instance.
-- `--interactive`/`-i`: select an EC2 instance to connect interactively. When using this option, config file (`gecco.yml` or `gecco.toml`) is required at `~/.config/` directory and available interactive filtering command (e.g., [fzf](https://github.com/junegunn/fzf) and [peco](https://github.com/peco/peco)) should be provided.
+- `--interactive`/`-i`: select an EC2 instance to connect interactively. When using this option, [config file](#config-file) is required.
+
+### config file
+
+Config file (`gecco.yml` or `gecco.toml`) should be placed at `~/.config/` directory.
+Please specify available interactive filtering command (e.g., [fzf](https://github.com/junegunn/fzf) and [peco](https://github.com/peco/peco)) as `InteractiveFilterCommand`.
 
 Example of config file:
 
