@@ -8,10 +8,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/ytakahashi/gecco/config"
 	"github.com/ytakahashi/gecco/ext"
 )
@@ -39,22 +35,6 @@ func (tags tags) toString() (str string) {
 	return
 }
 
-// IAwsService is an interface for Aws services
-type IAwsService interface {
-	initEc2Service() *ec2.EC2
-}
-
-// Ec2Service Ec2 Service
-type Ec2Service struct{}
-
-func (s Ec2Service) initEc2Service() *ec2.EC2 {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
-
-	return ec2.New(sess)
-}
-
 // Ec2Instance Ec2Instance
 type Ec2Instance struct {
 	instanceID   string
@@ -76,25 +56,16 @@ type Ec2Client interface {
 // StartInstance starts target instance
 func (e Ec2) StartInstance(target string, service IAwsService) error {
 	ec2Svc := service.initEc2Service()
+	result, err := service.start(ec2Svc, true, target)
 
-	input := &ec2.StartInstancesInput{
-		InstanceIds: []*string{
-			aws.String(target),
-		},
-		DryRun: aws.Bool(true),
-	}
-	result, err := ec2Svc.StartInstances(input)
-	awsErr, ok := err.(awserr.Error)
-
-	if ok && awsErr.Code() == "DryRunOperation" {
-		input.DryRun = aws.Bool(false)
-		result, err = ec2Svc.StartInstances(input)
+	if service.handleError(err) {
+		result, err = service.start(ec2Svc, false, target)
 		if err != nil {
 			return err
 		}
+
 		fmt.Println("Success:", result.StartingInstances)
 		return nil
-
 	}
 	return err
 }
@@ -103,24 +74,16 @@ func (e Ec2) StartInstance(target string, service IAwsService) error {
 func (e Ec2) StopInstance(target string, service IAwsService) error {
 	ec2Svc := service.initEc2Service()
 
-	input := &ec2.StopInstancesInput{
-		InstanceIds: []*string{
-			aws.String(target),
-		},
-		DryRun: aws.Bool(true),
-	}
-	result, err := ec2Svc.StopInstances(input)
-	awsErr, ok := err.(awserr.Error)
+	result, err := service.stop(ec2Svc, true, target)
 
-	if ok && awsErr.Code() == "DryRunOperation" {
-		input.DryRun = aws.Bool(false)
-		result, err = ec2Svc.StopInstances(input)
+	if service.handleError(err) {
+		result, err = service.stop(ec2Svc, false, target)
 		if err != nil {
 			return err
 		}
+
 		fmt.Println("Success:", result.StoppingInstances)
 		return nil
-
 	}
 	return err
 }
@@ -157,14 +120,6 @@ type Instances interface {
 // Ec2Instances contains EC2 instance info
 type Ec2Instances []Ec2Instance
 
-func (instances Ec2Instances) toStringSlice() []string {
-	sl := make([]string, 0)
-	for _, i := range instances {
-		sl = append(sl, i.instanceID+",Tags="+i.tags.toString())
-	}
-	return sl
-}
-
 // Print instances
 func (instances Ec2Instances) Print(w io.Writer) {
 	for _, i := range instances {
@@ -200,62 +155,4 @@ func (instances Ec2Instances) GetFilteredInstances(filter ext.ICommand) (selecte
 	selected = strings.TrimSpace(buf.String())
 	selected = strings.Split(selected, ",")[0]
 	return
-}
-
-func createInput(options config.FilterOption) ec2.DescribeInstancesInput {
-	filters := make([]*ec2.Filter, 0)
-
-	if options.Status != "" {
-		filter := ec2.Filter{
-			Name:   aws.String("instance-state-name"),
-			Values: []*string{aws.String(options.Status)},
-		}
-		filters = append(filters, &filter)
-	} else {
-		filter := ec2.Filter{
-			Name: aws.String("instance-state-name"),
-			Values: []*string{
-				aws.String("running"),
-				aws.String("pending"),
-				aws.String("stopping"),
-				aws.String("shutting-down"),
-				aws.String("terminated"),
-				aws.String("stopped"),
-			},
-		}
-		filters = append(filters, &filter)
-	}
-
-	if options.TagKey != "" && options.TagValue != "" {
-		filter := ec2.Filter{
-			Name:   aws.String("tag:" + options.TagKey),
-			Values: []*string{aws.String(options.TagValue)},
-		}
-		filters = append(filters, &filter)
-	}
-
-	return ec2.DescribeInstancesInput{
-		Filters: filters,
-	}
-}
-
-func newEc2Instance(i ec2.Instance) Ec2Instance {
-	tags := make(tags, 0)
-	for _, t := range i.Tags {
-		tag := tag{key: *t.Key, value: *t.Value}
-		tags = append(tags, tag)
-	}
-
-	var status string
-	s := i.State
-	if s != nil {
-		status = aws.StringValue(s.Name)
-	}
-
-	return Ec2Instance{
-		instanceID:   aws.StringValue(i.InstanceId),
-		instanceType: aws.StringValue(i.InstanceType),
-		status:       status,
-		tags:         tags,
-	}
 }
