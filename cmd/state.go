@@ -32,7 +32,6 @@ func newStartCmd(command iStateCommand) *cobra.Command {
 	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "start specified EC2 instance",
-		Long:  "start specified EC2 instance",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			err = command.initStateCommand(*startOpts, aws.Ec2{}, &config.Config{})
 			if err != nil {
@@ -53,7 +52,6 @@ func newStopCmd(command iStateCommand) *cobra.Command {
 	stopCmd := &cobra.Command{
 		Use:   "stop",
 		Short: "stop specified EC2 instance",
-		Long:  "stop specified EC2 instance",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			err = command.initStateCommand(*stopOpts, aws.Ec2{}, &config.Config{})
 			if err != nil {

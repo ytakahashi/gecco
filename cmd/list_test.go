@@ -105,7 +105,7 @@ func (e mockedEc2_2) StopInstance(target string, s aws.IAwsService) error {
 	return nil
 }
 
-func TestInitListCommand(t *testing.T) {
+func Test_ListCommand_InitListCommand(t *testing.T) {
 	o := config.FilterOption{
 		Status: "status",
 	}
@@ -121,7 +121,7 @@ func TestInitListCommand(t *testing.T) {
 	}
 }
 
-func TestRunCommand1(t *testing.T) {
+func Test_ListCommand_RunCommand1(t *testing.T) {
 	sut := listCommand{
 		options: config.FilterOption{Status: "foo"},
 	}
@@ -133,7 +133,7 @@ func TestRunCommand1(t *testing.T) {
 	}
 }
 
-func TestRunCommand2(t *testing.T) {
+func Test_ListCommand_RunCommand2(t *testing.T) {
 	sut := listCommand{
 		options:   config.FilterOption{},
 		ec2Client: mockedEc2_2{},
@@ -146,7 +146,7 @@ func TestRunCommand2(t *testing.T) {
 	}
 }
 
-func TestRunCommand3(t *testing.T) {
+func Test_ListCommand_RunCommand3(t *testing.T) {
 	sut := listCommand{
 		options:   config.FilterOption{},
 		ec2Client: mockedEc2_1{},

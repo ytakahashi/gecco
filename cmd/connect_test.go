@@ -63,23 +63,7 @@ func TestNewConnectCmd(t *testing.T) {
 	}
 }
 
-func TestRunCommand_Error1(t *testing.T) {
-	opts := config.TargetOption{
-		Target:      "foo",
-		Interactive: true,
-	}
-	command := connectCommand{
-		option: opts,
-	}
-
-	err := command.runCommand()
-
-	if err == nil {
-		t.Error("Error")
-	}
-}
-
-func TestInitConnectCommand_Normal1(t *testing.T) {
+func Test_ConnectCommand_InitConnectCommand_Normal1(t *testing.T) {
 	opts := config.TargetOption{
 		Interactive: false,
 		Target:      "foo",
@@ -123,7 +107,7 @@ func (c mockedConfig1) GetConfig() config.Config {
 	}
 }
 
-func TestInitConnectCommand_Normal2(t *testing.T) {
+func Test_ConnectCommand_InitConnectCommand_Normal2(t *testing.T) {
 	opts := config.TargetOption{
 		Interactive: true,
 	}
@@ -166,7 +150,7 @@ func (c mockedConfig2) GetConfig() config.Config {
 	}
 }
 
-func TestInitConnectCommand_Error(t *testing.T) {
+func Test_ConnectCommand_InitConnectCommand_Error(t *testing.T) {
 	o := config.TargetOption{
 		Interactive: true,
 	}
@@ -196,7 +180,23 @@ func (e mockedEc2_3) StopInstance(target string, s aws.IAwsService) error {
 	return nil
 }
 
-func TestRunCommand_Error2(t *testing.T) {
+func Test_ConnectCommand_RunCommand_Error1(t *testing.T) {
+	opts := config.TargetOption{
+		Target:      "foo",
+		Interactive: true,
+	}
+	command := connectCommand{
+		option: opts,
+	}
+
+	err := command.runCommand()
+
+	if err == nil {
+		t.Error("Error")
+	}
+}
+
+func Test_ConnectCommand_RunCommand_Error2(t *testing.T) {
 	opts := config.TargetOption{
 		Interactive: true,
 	}
@@ -226,7 +226,7 @@ func (e mockedEc2_4) StopInstance(target string, s aws.IAwsService) error {
 	return nil
 }
 
-func TestRunCommand_Normal1(t *testing.T) {
+func Test_ConnectCommand_RunCommand_Normal1(t *testing.T) {
 	opts := config.TargetOption{
 		Interactive: true,
 	}
@@ -247,7 +247,7 @@ func TestRunCommand_Normal1(t *testing.T) {
 	}
 }
 
-func TestRunCommand_Normal2(t *testing.T) {
+func Test_ConnectCommand_RunCommand_Normal2(t *testing.T) {
 	opts := config.TargetOption{
 		Target:      "foo",
 		Interactive: false,
