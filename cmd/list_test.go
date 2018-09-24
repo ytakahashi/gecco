@@ -79,29 +79,29 @@ func TestNewListCmd(t *testing.T) {
 
 type mockedEc2_1 struct{}
 
-func (e mockedEc2_1) GetInstances(o config.FilterOption, s aws.IAwsService) (instances aws.Ec2Instances, err error) {
+func (e mockedEc2_1) GetInstances(o config.FilterOption, s aws.IEc2Service) (instances aws.Ec2Instances, err error) {
 	return aws.Ec2Instances{}, nil
 }
 
-func (e mockedEc2_1) StartInstance(target string, s aws.IAwsService) error {
+func (e mockedEc2_1) StartInstance(target string, s aws.IEc2Service) error {
 	return nil
 }
 
-func (e mockedEc2_1) StopInstance(target string, s aws.IAwsService) error {
+func (e mockedEc2_1) StopInstance(target string, s aws.IEc2Service) error {
 	return nil
 }
 
 type mockedEc2_2 struct{}
 
-func (e mockedEc2_2) GetInstances(o config.FilterOption, s aws.IAwsService) (instances aws.Ec2Instances, err error) {
+func (e mockedEc2_2) GetInstances(o config.FilterOption, s aws.IEc2Service) (instances aws.Ec2Instances, err error) {
 	return nil, errors.New("error")
 }
 
-func (e mockedEc2_2) StartInstance(target string, s aws.IAwsService) error {
+func (e mockedEc2_2) StartInstance(target string, s aws.IEc2Service) error {
 	return nil
 }
 
-func (e mockedEc2_2) StopInstance(target string, s aws.IAwsService) error {
+func (e mockedEc2_2) StopInstance(target string, s aws.IEc2Service) error {
 	return nil
 }
 

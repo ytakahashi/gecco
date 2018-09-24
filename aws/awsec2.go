@@ -8,8 +8,8 @@ import (
 	"github.com/ytakahashi/gecco/config"
 )
 
-// IAwsService is an interface for Aws services
-type IAwsService interface {
+// IEc2Service is an interface for ec2 services
+type IEc2Service interface {
 	initEc2Service() *ec2.EC2
 	start(*ec2.EC2, bool, string) (*ec2.StartInstancesOutput, error)
 	stop(*ec2.EC2, bool, string) (*ec2.StopInstancesOutput, error)
@@ -42,7 +42,7 @@ func (s Ec2Service) stop(ec2Svc *ec2.EC2, dryRun bool, instanceID string) (*ec2.
 		InstanceIds: []*string{
 			aws.String(instanceID),
 		},
-		DryRun: aws.Bool(true),
+		DryRun: aws.Bool(dryRun),
 	}
 	return ec2Svc.StopInstances(input)
 }
@@ -59,7 +59,7 @@ func (s Ec2Service) handleError(err error) bool {
 func (instances Ec2Instances) toStringSlice() []string {
 	sl := make([]string, 0)
 	for _, i := range instances {
-		sl = append(sl, i.instanceID+",Tags="+i.tags.toString())
+		sl = append(sl, i.instanceID+" ("+i.status+"), Tags="+i.tags.toString())
 	}
 	return sl
 }

@@ -16,7 +16,7 @@ const (
 	stopInstance
 )
 
-func (c instanceOperation) getFunc(e aws.Ec2Client) (func(string, aws.IAwsService) error, error) {
+func (c instanceOperation) getFunc(e aws.Ec2Client) (func(string, aws.IEc2Service) error, error) {
 	switch c {
 	case startInstance:
 		return e.StartInstance, nil

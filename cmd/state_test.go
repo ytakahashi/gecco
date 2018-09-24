@@ -10,15 +10,15 @@ import (
 
 type mockedEc2ForStateTest1 struct{}
 
-func (e mockedEc2ForStateTest1) GetInstances(options config.FilterOption, s aws.IAwsService) (instances aws.Ec2Instances, err error) {
+func (e mockedEc2ForStateTest1) GetInstances(options config.FilterOption, s aws.IEc2Service) (instances aws.Ec2Instances, err error) {
 	return nil, nil
 }
 
-func (e mockedEc2ForStateTest1) StartInstance(target string, s aws.IAwsService) error {
+func (e mockedEc2ForStateTest1) StartInstance(target string, s aws.IEc2Service) error {
 	return nil
 }
 
-func (e mockedEc2ForStateTest1) StopInstance(target string, s aws.IAwsService) error {
+func (e mockedEc2ForStateTest1) StopInstance(target string, s aws.IEc2Service) error {
 	return nil
 }
 
@@ -236,15 +236,15 @@ func TestInitStateCommand_Error(t *testing.T) {
 
 type mockedEc2ForStateTest2 struct{}
 
-func (e mockedEc2ForStateTest2) GetInstances(options config.FilterOption, s aws.IAwsService) (instances aws.Ec2Instances, err error) {
+func (e mockedEc2ForStateTest2) GetInstances(options config.FilterOption, s aws.IEc2Service) (instances aws.Ec2Instances, err error) {
 	return nil, errors.New("error")
 }
 
-func (e mockedEc2ForStateTest2) StartInstance(target string, s aws.IAwsService) error {
+func (e mockedEc2ForStateTest2) StartInstance(target string, s aws.IEc2Service) error {
 	return nil
 }
 
-func (e mockedEc2ForStateTest2) StopInstance(target string, s aws.IAwsService) error {
+func (e mockedEc2ForStateTest2) StopInstance(target string, s aws.IEc2Service) error {
 	return nil
 }
 

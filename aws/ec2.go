@@ -35,7 +35,7 @@ func (tags tags) toString() (str string) {
 	return
 }
 
-// Ec2Instance Ec2Instance
+// Ec2Instance ec2 instance used in this app
 type Ec2Instance struct {
 	instanceID   string
 	instanceType string
@@ -48,13 +48,13 @@ type Ec2 struct{}
 
 // Ec2Client Ec2 Client
 type Ec2Client interface {
-	GetInstances(config.FilterOption, IAwsService) (Ec2Instances, error)
-	StartInstance(string, IAwsService) error
-	StopInstance(string, IAwsService) error
+	GetInstances(config.FilterOption, IEc2Service) (Ec2Instances, error)
+	StartInstance(string, IEc2Service) error
+	StopInstance(string, IEc2Service) error
 }
 
 // StartInstance starts target instance
-func (e Ec2) StartInstance(target string, service IAwsService) error {
+func (e Ec2) StartInstance(target string, service IEc2Service) error {
 	ec2Svc := service.initEc2Service()
 	result, err := service.start(ec2Svc, true, target)
 
@@ -71,7 +71,7 @@ func (e Ec2) StartInstance(target string, service IAwsService) error {
 }
 
 // StopInstance stops target instance
-func (e Ec2) StopInstance(target string, service IAwsService) error {
+func (e Ec2) StopInstance(target string, service IEc2Service) error {
 	ec2Svc := service.initEc2Service()
 
 	result, err := service.stop(ec2Svc, true, target)
@@ -88,8 +88,8 @@ func (e Ec2) StopInstance(target string, service IAwsService) error {
 	return err
 }
 
-// GetInstances Get Instances
-func (e Ec2) GetInstances(options config.FilterOption, service IAwsService) (instances Ec2Instances, err error) {
+// GetInstances returns Instances
+func (e Ec2) GetInstances(options config.FilterOption, service IEc2Service) (instances Ec2Instances, err error) {
 	ec2Svc := service.initEc2Service()
 
 	input := createInput(options)
@@ -132,7 +132,7 @@ func (instances Ec2Instances) Print(w io.Writer) {
 	}
 }
 
-// GetFilteredInstances GetFilteredInstances
+// GetFilteredInstances returns isntanceID of a selected instance
 func (instances Ec2Instances) GetFilteredInstances(filter ext.ICommand) (selected string, err error) {
 	records := instances.toStringSlice()
 	var text string
@@ -153,6 +153,6 @@ func (instances Ec2Instances) GetFilteredInstances(filter ext.ICommand) (selecte
 	}
 
 	selected = strings.TrimSpace(buf.String())
-	selected = strings.Split(selected, ",")[0]
+	selected = strings.Split(selected, " ")[0]
 	return
 }
