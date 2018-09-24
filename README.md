@@ -25,6 +25,8 @@ Available Commands:
   connect     connect to EC2 instance
   help        Help about any command
   list        lists EC2 instances
+  start       start specified EC2 instance
+  stop        stop specified EC2 instance
 ```
 
 ### list
@@ -45,7 +47,7 @@ Target EC2 instance is provided by option `--target` or `-i/--interactive`.
 #### options (start/stop)
 
 - `--target`: connect to the specified instance.
-- `--interactive`/`-i`: select an EC2 instance to connect interactively. When using this option, config file (`gecco.yml` or `gecco.toml`) is required.
+- `--interactive`/`-i`: select an EC2 instance to connect interactively. When using this option, [config file](#config-file) is required.
 
 ### connect
 
@@ -60,11 +62,11 @@ Target EC2 instance is provided by option `--target` or `-i/--interactive`.
 #### options (connect)
 
 - `--target`: connect to the specified instance.
-- `--interactive`/`-i`: select an EC2 instance to connect interactively. When using this option, config file is required.
+- `--interactive`/`-i`: select an EC2 instance to connect interactively. When using this option, [config file](#config-file) is required.
 
 ### config file
 
-Following config file (`gecco.yml` or `gecco.toml`) should be placed at `~/.config/` directory.
+Config file (`gecco.yml` or `gecco.toml`) should be placed at `~/.config/` directory.
 Please specify available interactive filtering command (e.g., [fzf](https://github.com/junegunn/fzf) and [peco](https://github.com/peco/peco)) as `InteractiveFilterCommand`.
 
 Example of config file:
