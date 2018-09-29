@@ -38,6 +38,7 @@ Listed information contains instanceId, instance size, instance status, and tags
 
 - `--status`: only lists instances of specified status.
 - `--tagKey`, `--tagValue`: only lists instances which have specified tag.
+- `--output`: specifies output format like aws cli. Supported format is "text" (default) or "json".
 
 ### start/stop
 
