@@ -27,7 +27,7 @@ type TargetOption struct {
 	Interactive bool
 }
 
-// OutputFormat represents supported output formats
+// OutputFormat is an enum to hold supported output formats
 type OutputFormat int
 
 const (
@@ -80,7 +80,6 @@ func (option FilterOption) IsValid() error {
 	}
 
 	format := strings.ToLower(option.OutputFormat)
-	fmt.Println("OutputFormat", format)
 	if format != "text" && format != "json" {
 		return errors.New("Option '--output' should be one of 'text' or 'json'")
 	}
@@ -88,7 +87,7 @@ func (option FilterOption) IsValid() error {
 	return nil
 }
 
-// GetOutputFormat returns OutputFormat
+// GetOutputFormat returns OutputFormat enum
 func (option FilterOption) GetOutputFormat() OutputFormat {
 	value := option.OutputFormat
 	return NewOutputFormat(value)

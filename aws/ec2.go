@@ -115,7 +115,6 @@ func (e Ec2) GetInstances(options config.FilterOption, service IEc2Service) (ins
 
 // Instances instances
 type Instances interface {
-	// Print(w io.Writer)
 	GetFilteredInstances(ext.ICommand) (string, error)
 }
 
