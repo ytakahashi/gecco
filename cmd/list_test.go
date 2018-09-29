@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -148,7 +150,9 @@ func Test_ListCommand_RunCommand2(t *testing.T) {
 
 func Test_ListCommand_RunCommand3(t *testing.T) {
 	sut := listCommand{
-		options:   config.FilterOption{},
+		options: config.FilterOption{
+			OutputFormat: "text",
+		},
 		ec2Client: mockedEc2_1{},
 	}
 
@@ -156,5 +160,69 @@ func Test_ListCommand_RunCommand3(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("%v", err)
+	}
+}
+
+func Test_PrintInstances1(t *testing.T) {
+	i := aws.Ec2Instance{
+		InstanceID:   "instance1",
+		InstanceType: "type1",
+		Status:       "status1",
+		Tags:         []aws.Tag{{Key: "k", Value: "v"}},
+	}
+	instanceList := aws.Ec2Instances{i}
+
+	expected := "instance1 type1 status1 [{\"k\": \"v\"}]\n"
+
+	buf := &bytes.Buffer{}
+	err := printInstances(instanceList, buf, config.Text)
+	actual := buf.String()
+	if actual != expected {
+		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
+	}
+
+	if err != nil {
+		t.Errorf("ERR: %v", err)
+	}
+}
+
+func Test_PrintInstances2(t *testing.T) {
+	i := aws.Ec2Instance{
+		InstanceID:   "instance1",
+		InstanceType: "type1",
+		Status:       "status1",
+		Tags:         []aws.Tag{{Key: "k", Value: "v"}},
+	}
+	instanceList := aws.Ec2Instances{i}
+
+	b, _ := json.MarshalIndent(&instanceList, "", "    ")
+	expected := string(b)
+
+	buf := &bytes.Buffer{}
+	err := printInstances(instanceList, buf, config.JSON)
+	actual := buf.String()
+	if actual != expected {
+		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
+	}
+
+	if err != nil {
+		t.Errorf("ERR: %v", err)
+	}
+}
+
+func Test_PrintInstances3(t *testing.T) {
+	i := aws.Ec2Instance{
+		InstanceID:   "instance1",
+		InstanceType: "type1",
+		Status:       "status1",
+		Tags:         []aws.Tag{{Key: "k", Value: "v"}},
+	}
+	instanceList := aws.Ec2Instances{i}
+
+	buf := &bytes.Buffer{}
+	err := printInstances(instanceList, buf, config.Unknown)
+
+	if err == nil {
+		t.Errorf("ERR: %v", err)
 	}
 }

@@ -1,15 +1,44 @@
 package aws
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"os/exec"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
+
+func Test_Tag_ToString(t *testing.T) {
+	tag := Tag{
+		Key:   "k",
+		Value: "v",
+	}
+
+	actual := tag.toString()
+	expected := "{\"k\": \"v\"}"
+	if actual != expected {
+		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
+	}
+}
+
+func Test_Tags_ToString1(t *testing.T) {
+	tags := Tags{}
+	actual := tags.ToString()
+	expected := ""
+	if actual != expected {
+		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
+	}
+}
+
+func Test_Tags_ToString2(t *testing.T) {
+	tags := Tags{{Key: "k1", Value: "v1"}, {Key: "k2", Value: "v2"}}
+	actual := tags.ToString()
+	expected := "[{\"k1\": \"v1\"}, {\"k2\": \"v2\"}]"
+	if actual != expected {
+		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
+	}
+}
 
 type mockedEc2Service1 struct{}
 
@@ -162,55 +191,6 @@ func Test_Ec2Client_StopInstance_Error2(t *testing.T) {
 	}
 }
 
-func Test_Ec2Instances_Print1(t *testing.T) {
-	buf := &bytes.Buffer{}
-	i := Ec2Instance{
-		instanceID:   "instance id",
-		instanceType: "instance type",
-		status:       "status",
-	}
-	instances := Ec2Instances{i}
-
-	instances.Print(buf)
-
-	expected := fmt.Sprintln(
-		i.instanceID,
-		i.instanceType,
-		i.status,
-		"",
-	)
-	actual := buf.String()
-
-	if expected != actual {
-		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
-	}
-}
-
-func Test_Ec2Instances_Print2(t *testing.T) {
-	buf := &bytes.Buffer{}
-	i := Ec2Instance{
-		instanceID:   "instance id",
-		instanceType: "instance type",
-		status:       "status",
-		tags:         []tag{{key: "k", value: "v"}},
-	}
-	instances := Ec2Instances{i}
-
-	instances.Print(buf)
-
-	expected := fmt.Sprintln(
-		i.instanceID,
-		i.instanceType,
-		i.status,
-		"[{\"k\": \"v\"}]",
-	)
-	actual := buf.String()
-
-	if expected != actual {
-		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
-	}
-}
-
 type mockedCommand1 struct{}
 type mockedCommand2 struct{}
 
@@ -235,7 +215,7 @@ func (c mockedCommand2) CreateCommand(i io.Reader, o io.Writer, e io.Writer) *ex
 func TestGetFilteredInstances1(t *testing.T) {
 	i := Ec2Instances{
 		Ec2Instance{
-			instanceID: "instanceId",
+			InstanceID: "instanceId",
 		},
 	}
 

@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -23,6 +27,7 @@ func newListCmd(command iListCommand) *cobra.Command {
 	listCmd.Flags().StringVarP(&listOpts.TagKey, "tagKey", "", "", "filters instances by tag key")
 	listCmd.Flags().StringVarP(&listOpts.TagValue, "tagValue", "", "", "filters instances by tag value")
 	listCmd.Flags().StringVarP(&listOpts.Status, "status", "", "", "filters instances by status")
+	listCmd.Flags().StringVarP(&listOpts.OutputFormat, "output", "o", "text", "filters instances by status")
 
 	return listCmd
 }
@@ -55,6 +60,28 @@ func (c listCommand) runCommand() (err error) {
 		return err
 	}
 
-	instances.Print(os.Stdout)
-	return
+	return printInstances(instances, os.Stdout, options.GetOutputFormat())
+}
+
+func printInstances(instances aws.Ec2Instances, w io.Writer, outputFormat config.OutputFormat) error {
+	switch outputFormat {
+	case config.Text:
+		for _, i := range instances {
+			fmt.Fprintln(w,
+				i.InstanceID,
+				i.InstanceType,
+				i.Status,
+				i.Tags.ToString(),
+			)
+		}
+		return nil
+
+	case config.JSON:
+		b, _ := json.MarshalIndent(&instances, "", "    ")
+		fmt.Fprint(w, string(b))
+		return nil
+
+	default:
+		return errors.New("Unexpected OutputFormat")
+	}
 }

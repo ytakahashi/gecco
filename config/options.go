@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // IOption is an interface for option.
@@ -12,9 +13,10 @@ type IOption interface {
 
 // FilterOption stores options for list command.
 type FilterOption struct {
-	Status   string
-	TagKey   string
-	TagValue string
+	Status       string
+	TagKey       string
+	TagValue     string
+	OutputFormat string
 }
 
 // TargetOption stores options for connect/start/stop command.
@@ -23,6 +25,31 @@ type TargetOption struct {
 	Target string
 	// A flag whether to select ec2 interactively.
 	Interactive bool
+}
+
+// OutputFormat represents supported output formats
+type OutputFormat int
+
+const (
+	// Unknown format
+	Unknown OutputFormat = iota
+	// Text format
+	Text
+	// JSON foramt
+	JSON
+)
+
+// NewOutputFormat initializes OutputFormat from string value
+func NewOutputFormat(value string) (f OutputFormat) {
+	switch value {
+	case "text":
+		f = Text
+	case "json":
+		f = JSON
+	default:
+		f = Unknown
+	}
+	return
 }
 
 // IsValid validates given options.
@@ -52,7 +79,19 @@ func (option FilterOption) IsValid() error {
 		return errors.New("Option '--tagValue' is required when '--tagKey' is specified")
 	}
 
+	format := strings.ToLower(option.OutputFormat)
+	fmt.Println("OutputFormat", format)
+	if format != "text" && format != "json" {
+		return errors.New("Option '--output' should be one of 'text' or 'json'")
+	}
+
 	return nil
+}
+
+// GetOutputFormat returns OutputFormat
+func (option FilterOption) GetOutputFormat() OutputFormat {
+	value := option.OutputFormat
+	return NewOutputFormat(value)
 }
 
 func isValidStatus(e string) bool {
