@@ -5,6 +5,30 @@ import (
 	"testing"
 )
 
+func TestOutputFormat_FromString_Error1(t *testing.T) {
+	assert := func(actual OutputFormat, expected OutputFormat) {
+		if actual != expected {
+			t.Errorf("Actual '%v', ecpected: '%v'", actual, expected)
+		}
+	}
+
+	value1 := "text"
+	value2 := "json"
+	value3 := "foo"
+
+	expected1 := Text
+	expected2 := JSON
+	expected3 := Unknown
+
+	actual1 := NewOutputFormat(value1)
+	actual2 := NewOutputFormat(value2)
+	actual3 := NewOutputFormat(value3)
+
+	assert(actual1, expected1)
+	assert(actual2, expected2)
+	assert(actual3, expected3)
+}
+
 func TestTargetOption_IsValid_Error1(t *testing.T) {
 	c := TargetOption{}
 	expected := "Option '--target' or '-i' is required"
@@ -48,8 +72,10 @@ func TestTargetOption_IsValid_Ok(t *testing.T) {
 	}
 }
 
-func TestIsValid_One(t *testing.T) {
-	options := FilterOption{}
+func Test_FilterOption_IsValid_Normal1(t *testing.T) {
+	options := FilterOption{
+		OutputFormat: "text",
+	}
 
 	actual := options.IsValid()
 
@@ -58,7 +84,19 @@ func TestIsValid_One(t *testing.T) {
 	}
 }
 
-func TestIsValid_InvalidStatus(t *testing.T) {
+func Test_FilterOption_IsValid_Normal2(t *testing.T) {
+	options := FilterOption{
+		OutputFormat: "JSON",
+	}
+
+	actual := options.IsValid()
+
+	if actual != nil {
+		t.Errorf("Error")
+	}
+}
+
+func Test_FilterOption_IsValid_InvalidStatus(t *testing.T) {
 	status := "foo"
 	options := FilterOption{Status: status}
 
@@ -74,7 +112,7 @@ func TestIsValid_InvalidStatus(t *testing.T) {
 	}
 }
 
-func TestIsValid_InvalidTags1(t *testing.T) {
+func Test_FilterOption_IsValid_InvalidTags1(t *testing.T) {
 	tagKey := "foo"
 	options := FilterOption{TagKey: tagKey}
 
@@ -90,7 +128,7 @@ func TestIsValid_InvalidTags1(t *testing.T) {
 	}
 }
 
-func TestIsValid_InvalidTags2(t *testing.T) {
+func Test_FilterOption_IsValid_InvalidTags2(t *testing.T) {
 	tagValue := "foo"
 	options := FilterOption{TagValue: tagValue}
 
@@ -102,6 +140,35 @@ func TestIsValid_InvalidTags2(t *testing.T) {
 	}
 
 	if actual.Error() != expected {
+		t.Errorf("Error:\n Actual: %v\n Expected: %v", actual, expected)
+	}
+}
+
+func Test_FilterOption_IsValid_InvalidFormat(t *testing.T) {
+	options := FilterOption{
+		OutputFormat: "foo",
+	}
+	expected := "Option '--output' should be one of 'text' or 'json'"
+	actual := options.IsValid()
+
+	if actual == nil {
+		t.Errorf("Error")
+	}
+
+	if actual.Error() != expected {
+		t.Errorf("Error:\n Actual: %v\n Expected: %v", actual, expected)
+	}
+}
+
+func Test_FilterOption_GetOutputFormat(t *testing.T) {
+	options := FilterOption{
+		OutputFormat: "json",
+	}
+
+	expected := JSON
+	actual := options.GetOutputFormat()
+
+	if actual != expected {
 		t.Errorf("Error:\n Actual: %v\n Expected: %v", actual, expected)
 	}
 }

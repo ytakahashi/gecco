@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -12,18 +11,21 @@ import (
 	"github.com/ytakahashi/gecco/ext"
 )
 
-type tag struct {
-	key   string
-	value string
+// Tag attached to an instance
+type Tag struct {
+	Key   string
+	Value string
 }
 
-func (t tag) toString() string {
-	return "{\"" + t.key + "\": \"" + t.value + "\"}"
+func (t Tag) toString() string {
+	return "{\"" + t.Key + "\": \"" + t.Value + "\"}"
 }
 
-type tags []tag
+// Tags tag slice
+type Tags []Tag
 
-func (tags tags) toString() (str string) {
+// ToString returns string
+func (tags Tags) ToString() (str string) {
 	if len(tags) > 0 {
 		str = "["
 		for _, t := range tags {
@@ -37,10 +39,10 @@ func (tags tags) toString() (str string) {
 
 // Ec2Instance ec2 instance used in this app
 type Ec2Instance struct {
-	instanceID   string
-	instanceType string
-	status       string
-	tags         tags
+	InstanceID   string
+	InstanceType string
+	Status       string
+	Tags         Tags
 }
 
 // Ec2 contains EC2 instance info
@@ -103,7 +105,7 @@ func (e Ec2) GetInstances(options config.FilterOption, service IEc2Service) (ins
 	for _, r := range result.Reservations {
 		for _, i := range r.Instances {
 			instance := newEc2Instance(*i)
-			if instance.instanceID != "" {
+			if instance.InstanceID != "" {
 				instances = append(instances, instance)
 			}
 		}
@@ -113,24 +115,11 @@ func (e Ec2) GetInstances(options config.FilterOption, service IEc2Service) (ins
 
 // Instances instances
 type Instances interface {
-	Print(w io.Writer)
 	GetFilteredInstances(ext.ICommand) (string, error)
 }
 
 // Ec2Instances contains EC2 instance info
 type Ec2Instances []Ec2Instance
-
-// Print instances
-func (instances Ec2Instances) Print(w io.Writer) {
-	for _, i := range instances {
-		fmt.Fprintln(w,
-			i.instanceID,
-			i.instanceType,
-			i.status,
-			i.tags.toString(),
-		)
-	}
-}
 
 // GetFilteredInstances returns isntanceID of a selected instance
 func (instances Ec2Instances) GetFilteredInstances(filter ext.ICommand) (selected string, err error) {
