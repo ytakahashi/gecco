@@ -38,7 +38,7 @@ func Test_Ec2Service_HandleError1(t *testing.T) {
 	sut := Ec2Service{}
 
 	actual := sut.handleError(mockedAwsError1{})
-	if actual != true {
+	if !actual {
 		t.Error("Error")
 	}
 }
@@ -65,7 +65,7 @@ func Test_Ec2Service_HandleError2(t *testing.T) {
 	sut := Ec2Service{}
 
 	actual := sut.handleError(mockedAwsError2{})
-	if actual != false {
+	if actual {
 		t.Error("Error")
 	}
 }

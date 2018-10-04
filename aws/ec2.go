@@ -56,10 +56,10 @@ type Ec2Client interface {
 // StartInstance starts target instance
 func (e Ec2) StartInstance(target string, service IEc2Service) error {
 	ec2Svc := service.initEc2Service()
-	result, err := service.start(ec2Svc, true, target)
+	_, err := service.start(ec2Svc, true, target)
 
 	if service.handleError(err) {
-		result, err = service.start(ec2Svc, false, target)
+		result, err := service.start(ec2Svc, false, target)
 		if err != nil {
 			return err
 		}
@@ -73,11 +73,10 @@ func (e Ec2) StartInstance(target string, service IEc2Service) error {
 // StopInstance stops target instance
 func (e Ec2) StopInstance(target string, service IEc2Service) error {
 	ec2Svc := service.initEc2Service()
-
-	result, err := service.stop(ec2Svc, true, target)
+	_, err := service.stop(ec2Svc, true, target)
 
 	if service.handleError(err) {
-		result, err = service.stop(ec2Svc, false, target)
+		result, err := service.stop(ec2Svc, false, target)
 		if err != nil {
 			return err
 		}
