@@ -12,21 +12,18 @@ import (
 	"github.com/ytakahashi/gecco/ext"
 )
 
-// Tag attached to an instance
-type Tag struct {
-	Key   string
-	Value string
+type tag struct {
+	key   string
+	value string
 }
 
-func (t Tag) toString() string {
-	return "{\"" + t.Key + "\": \"" + t.Value + "\"}"
+func (t tag) toString() string {
+	return "{\"" + t.key + "\": \"" + t.value + "\"}"
 }
 
-// Tags tag slice
-type Tags []Tag
+type tags []tag
 
-// ToString returns string
-func (tags Tags) ToString() (str string) {
+func (tags tags) toString() (str string) {
 	if len(tags) > 0 {
 		str = "["
 		for _, t := range tags {
@@ -40,10 +37,10 @@ func (tags Tags) ToString() (str string) {
 
 // Ec2Instance ec2 instance used in this app
 type Ec2Instance struct {
-	InstanceID   string
-	InstanceType string
-	Status       string
-	Tags         Tags
+	instanceID   string
+	instanceType string
+	status       string
+	tags         tags
 }
 
 // Ec2 contains EC2 instance info
@@ -106,7 +103,7 @@ func (e Ec2) GetInstances(options config.FilterOption, service IEc2Service) (ins
 	for _, r := range result.Reservations {
 		for _, i := range r.Instances {
 			instance := newEc2Instance(*i)
-			if instance.InstanceID != "" {
+			if instance.instanceID != "" {
 				instances = append(instances, instance)
 			}
 		}
@@ -154,7 +151,7 @@ func (instances Ec2Instances) ToString(outputFormat config.OutputFormat) (string
 	case config.Text:
 		b := make([]byte, 0, len(instances))
 		for _, i := range instances {
-			s := i.InstanceID + " " + i.InstanceType + " " + i.Status + " " + i.Tags.ToString() + "\n"
+			s := i.instanceID + " " + i.instanceType + " " + i.status + " " + i.tags.toString() + "\n"
 			b = append(b, s...)
 		}
 		return string(b), nil

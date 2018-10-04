@@ -159,29 +159,29 @@ func TestNew(t *testing.T) {
 
 	actual := newEc2Instance(i)
 
-	if actual.InstanceID != expectedInstanceID {
-		t.Errorf("InstanceID:\nActual: %v\nExpected: %v", actual.InstanceID, expectedInstanceID)
+	if actual.instanceID != expectedInstanceID {
+		t.Errorf("InstanceID:\nActual: %v\nExpected: %v", actual.instanceID, expectedInstanceID)
 	}
 
-	if actual.InstanceType != "" {
-		t.Errorf("instanceType:\nActual: %v\nExpected: %v", actual.InstanceType, "expectedFilterlLength")
+	if actual.instanceType != "" {
+		t.Errorf("instanceType:\nActual: %v\nExpected: %v", actual.instanceType, "expectedFilterlLength")
 	}
 
-	if actual.Status != expectedStatus {
-		t.Errorf("status:\nActual: %v\nExpected: %v", actual.Status, expectedStatus)
+	if actual.status != expectedStatus {
+		t.Errorf("status:\nActual: %v\nExpected: %v", actual.status, expectedStatus)
 	}
 
-	if len(actual.Tags) > 1 {
+	if len(actual.tags) > 1 {
 		t.Errorf("Error")
 	}
 
 	key := "k"
-	if actual.Tags[0].Key != key {
-		t.Errorf("tag key:\nActual: %v\nExpected: %v", actual.Tags[0].Key, key)
+	if actual.tags[0].key != key {
+		t.Errorf("tag key:\nActual: %v\nExpected: %v", actual.tags[0].key, key)
 	}
 
 	val := "v"
-	if actual.Tags[0].Value != val {
-		t.Errorf("tag value:\nActual: %v\nExpected: %v", actual.Tags[0].Value, val)
+	if actual.tags[0].value != val {
+		t.Errorf("tag value:\nActual: %v\nExpected: %v", actual.tags[0].value, val)
 	}
 }

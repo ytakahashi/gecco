@@ -12,9 +12,9 @@ import (
 )
 
 func Test_Tag_ToString(t *testing.T) {
-	tag := Tag{
-		Key:   "k",
-		Value: "v",
+	tag := tag{
+		key:   "k",
+		value: "v",
 	}
 
 	actual := tag.toString()
@@ -25,8 +25,8 @@ func Test_Tag_ToString(t *testing.T) {
 }
 
 func Test_Tags_ToString1(t *testing.T) {
-	tags := Tags{}
-	actual := tags.ToString()
+	tags := tags{}
+	actual := tags.toString()
 	expected := ""
 	if actual != expected {
 		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
@@ -34,8 +34,8 @@ func Test_Tags_ToString1(t *testing.T) {
 }
 
 func Test_Tags_ToString2(t *testing.T) {
-	tags := Tags{{Key: "k1", Value: "v1"}, {Key: "k2", Value: "v2"}}
-	actual := tags.ToString()
+	tags := tags{{key: "k1", value: "v1"}, {key: "k2", value: "v2"}}
+	actual := tags.toString()
 	expected := "[{\"k1\": \"v1\"}, {\"k2\": \"v2\"}]"
 	if actual != expected {
 		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
@@ -217,7 +217,7 @@ func (c mockedCommand2) CreateCommand(i io.Reader, o io.Writer, e io.Writer) *ex
 func TestGetFilteredInstances1(t *testing.T) {
 	i := Ec2Instances{
 		Ec2Instance{
-			InstanceID: "instanceId",
+			instanceID: "instanceId",
 		},
 	}
 
@@ -252,10 +252,10 @@ func TestGetFilteredInstances2(t *testing.T) {
 
 func Test_Ec2Instances_ToString1(t *testing.T) {
 	i := Ec2Instance{
-		InstanceID:   "instance1",
-		InstanceType: "type1",
-		Status:       "status1",
-		Tags:         []Tag{{Key: "k", Value: "v"}},
+		instanceID:   "instance1",
+		instanceType: "type1",
+		status:       "status1",
+		tags:         []tag{{key: "k", value: "v"}},
 	}
 	instanceList := Ec2Instances{i}
 
@@ -273,10 +273,10 @@ func Test_Ec2Instances_ToString1(t *testing.T) {
 
 func Test_Ec2Instances_ToString2(t *testing.T) {
 	i := Ec2Instance{
-		InstanceID:   "instance1",
-		InstanceType: "type1",
-		Status:       "status1",
-		Tags:         []Tag{{Key: "k", Value: "v"}},
+		instanceID:   "instance1",
+		instanceType: "type1",
+		status:       "status1",
+		tags:         []tag{{key: "k", value: "v"}},
 	}
 	instanceList := Ec2Instances{i}
 
@@ -296,10 +296,10 @@ func Test_Ec2Instances_ToString2(t *testing.T) {
 
 func Test_Ec2Instances_ToString3(t *testing.T) {
 	i := Ec2Instance{
-		InstanceID:   "instance1",
-		InstanceType: "type1",
-		Status:       "status1",
-		Tags:         []Tag{{Key: "k", Value: "v"}},
+		instanceID:   "instance1",
+		instanceType: "type1",
+		status:       "status1",
+		tags:         []tag{{key: "k", value: "v"}},
 	}
 	instanceList := Ec2Instances{i}
 
