@@ -178,7 +178,7 @@ func TestIsValidStatus1(t *testing.T) {
 
 	for i := 0; i < len(status); i++ {
 		actual := isValidStatus(status[i])
-		if actual != true {
+		if !actual {
 			t.Errorf("Result of isValidStatus for Status '%v' was %v", status[i], actual)
 		}
 	}

@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -63,25 +61,12 @@ func (c listCommand) runCommand() (err error) {
 	return printInstances(instances, os.Stdout, options.GetOutputFormat())
 }
 
-func printInstances(instances aws.Ec2Instances, w io.Writer, outputFormat config.OutputFormat) error {
-	switch outputFormat {
-	case config.Text:
-		for _, i := range instances {
-			fmt.Fprintln(w,
-				i.InstanceID,
-				i.InstanceType,
-				i.Status,
-				i.Tags.ToString(),
-			)
-		}
-		return nil
-
-	case config.JSON:
-		b, _ := json.MarshalIndent(&instances, "", "    ")
-		fmt.Fprint(w, string(b))
-		return nil
-
-	default:
-		return errors.New("Unexpected OutputFormat")
+func printInstances(instances aws.Instances, w io.Writer, outputFormat config.OutputFormat) error {
+	str, err := instances.ToString(outputFormat)
+	if err != nil {
+		return err
 	}
+
+	fmt.Fprint(w, str)
+	return nil
 }

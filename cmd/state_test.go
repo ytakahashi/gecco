@@ -179,7 +179,7 @@ func TestInitStateCommand_Normal1(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	if command.option.Interactive == true {
+	if command.option.Interactive {
 		t.Error("err")
 	}
 
@@ -205,7 +205,7 @@ func TestInitStateCommand_Normal2(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	if command.option.Interactive == false {
+	if !command.option.Interactive {
 		t.Error("err")
 	}
 

@@ -59,7 +59,7 @@ func (s Ec2Service) handleError(err error) bool {
 func (instances Ec2Instances) toStringSlice() []string {
 	sl := make([]string, 0)
 	for _, i := range instances {
-		sl = append(sl, i.InstanceID+" ("+i.Status+"), Tags="+i.Tags.ToString())
+		sl = append(sl, i.instanceID+" ("+i.status+"), Tags="+i.tags.toString())
 	}
 	return sl
 }
@@ -102,9 +102,9 @@ func createInput(options config.FilterOption) ec2.DescribeInstancesInput {
 }
 
 func newEc2Instance(i ec2.Instance) Ec2Instance {
-	tags := make(Tags, 0)
+	tags := make(tags, 0)
 	for _, t := range i.Tags {
-		tag := Tag{Key: *t.Key, Value: *t.Value}
+		tag := tag{key: *t.Key, value: *t.Value}
 		tags = append(tags, tag)
 	}
 
@@ -115,9 +115,9 @@ func newEc2Instance(i ec2.Instance) Ec2Instance {
 	}
 
 	return Ec2Instance{
-		InstanceID:   aws.StringValue(i.InstanceId),
-		InstanceType: aws.StringValue(i.InstanceType),
-		Status:       status,
-		Tags:         tags,
+		instanceID:   aws.StringValue(i.InstanceId),
+		instanceType: aws.StringValue(i.InstanceType),
+		status:       status,
+		tags:         tags,
 	}
 }

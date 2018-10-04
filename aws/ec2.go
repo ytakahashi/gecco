@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -11,21 +12,18 @@ import (
 	"github.com/ytakahashi/gecco/ext"
 )
 
-// Tag attached to an instance
-type Tag struct {
-	Key   string
-	Value string
+type tag struct {
+	key   string
+	value string
 }
 
-func (t Tag) toString() string {
-	return "{\"" + t.Key + "\": \"" + t.Value + "\"}"
+func (t tag) toString() string {
+	return "{\"" + t.key + "\": \"" + t.value + "\"}"
 }
 
-// Tags tag slice
-type Tags []Tag
+type tags []tag
 
-// ToString returns string
-func (tags Tags) ToString() (str string) {
+func (tags tags) toString() (str string) {
 	if len(tags) > 0 {
 		str = "["
 		for _, t := range tags {
@@ -39,10 +37,10 @@ func (tags Tags) ToString() (str string) {
 
 // Ec2Instance ec2 instance used in this app
 type Ec2Instance struct {
-	InstanceID   string
-	InstanceType string
-	Status       string
-	Tags         Tags
+	instanceID   string
+	instanceType string
+	status       string
+	tags         tags
 }
 
 // Ec2 contains EC2 instance info
@@ -58,10 +56,10 @@ type Ec2Client interface {
 // StartInstance starts target instance
 func (e Ec2) StartInstance(target string, service IEc2Service) error {
 	ec2Svc := service.initEc2Service()
-	result, err := service.start(ec2Svc, true, target)
+	_, err := service.start(ec2Svc, true, target)
 
 	if service.handleError(err) {
-		result, err = service.start(ec2Svc, false, target)
+		result, err := service.start(ec2Svc, false, target)
 		if err != nil {
 			return err
 		}
@@ -75,11 +73,10 @@ func (e Ec2) StartInstance(target string, service IEc2Service) error {
 // StopInstance stops target instance
 func (e Ec2) StopInstance(target string, service IEc2Service) error {
 	ec2Svc := service.initEc2Service()
-
-	result, err := service.stop(ec2Svc, true, target)
+	_, err := service.stop(ec2Svc, true, target)
 
 	if service.handleError(err) {
-		result, err = service.stop(ec2Svc, false, target)
+		result, err := service.stop(ec2Svc, false, target)
 		if err != nil {
 			return err
 		}
@@ -105,7 +102,7 @@ func (e Ec2) GetInstances(options config.FilterOption, service IEc2Service) (ins
 	for _, r := range result.Reservations {
 		for _, i := range r.Instances {
 			instance := newEc2Instance(*i)
-			if instance.InstanceID != "" {
+			if instance.instanceID != "" {
 				instances = append(instances, instance)
 			}
 		}
@@ -116,6 +113,7 @@ func (e Ec2) GetInstances(options config.FilterOption, service IEc2Service) (ins
 // Instances instances
 type Instances interface {
 	GetFilteredInstances(ext.ICommand) (string, error)
+	ToString(config.OutputFormat) (string, error)
 }
 
 // Ec2Instances contains EC2 instance info
@@ -144,4 +142,24 @@ func (instances Ec2Instances) GetFilteredInstances(filter ext.ICommand) (selecte
 	selected = strings.TrimSpace(buf.String())
 	selected = strings.Split(selected, " ")[0]
 	return
+}
+
+// ToString returns string value of Ec2Instance
+func (instances Ec2Instances) ToString(outputFormat config.OutputFormat) (string, error) {
+	switch outputFormat {
+	case config.Text:
+		b := make([]byte, 0, len(instances))
+		for _, i := range instances {
+			s := i.instanceID + " " + i.instanceType + " " + i.status + " " + i.tags.toString() + "\n"
+			b = append(b, s...)
+		}
+		return string(b), nil
+
+	case config.JSON:
+		b, _ := json.MarshalIndent(&instances, "", "    ")
+		return string(b), nil
+
+	default:
+		return "", errors.New("Unexpected OutputFormat")
+	}
 }

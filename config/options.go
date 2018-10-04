@@ -54,11 +54,11 @@ func NewOutputFormat(value string) (f OutputFormat) {
 
 // IsValid validates given options.
 func (option TargetOption) IsValid() error {
-	if option.Target == "" && option.Interactive == false {
+	if option.Target == "" && !option.Interactive {
 		return errors.New("Option '--target' or '-i' is required")
 	}
 
-	if option.Target != "" && option.Interactive == true {
+	if option.Target != "" && option.Interactive {
 		return errors.New("Options '--target' and '-i' cannot be used at the same time")
 	}
 

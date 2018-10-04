@@ -77,7 +77,7 @@ func Test_ConnectCommand_InitConnectCommand_Normal1(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	if command.option.Interactive == true {
+	if command.option.Interactive {
 		t.Error("err")
 	}
 
@@ -120,7 +120,7 @@ func Test_ConnectCommand_InitConnectCommand_Normal2(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	if command.option.Interactive == false {
+	if !command.option.Interactive {
 		t.Error("err")
 	}
 

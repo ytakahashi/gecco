@@ -7,8 +7,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cfgFile string
-
 func newRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "gecco",
