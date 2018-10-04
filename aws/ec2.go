@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -116,6 +117,7 @@ func (e Ec2) GetInstances(options config.FilterOption, service IEc2Service) (ins
 // Instances instances
 type Instances interface {
 	GetFilteredInstances(ext.ICommand) (string, error)
+	ToString(config.OutputFormat) (string, error)
 }
 
 // Ec2Instances contains EC2 instance info
@@ -144,4 +146,24 @@ func (instances Ec2Instances) GetFilteredInstances(filter ext.ICommand) (selecte
 	selected = strings.TrimSpace(buf.String())
 	selected = strings.Split(selected, " ")[0]
 	return
+}
+
+// ToString returns string value of Ec2Instance
+func (instances Ec2Instances) ToString(outputFormat config.OutputFormat) (string, error) {
+	switch outputFormat {
+	case config.Text:
+		b := make([]byte, 0, len(instances))
+		for _, i := range instances {
+			s := i.InstanceID + " " + i.InstanceType + " " + i.Status + " " + i.Tags.ToString() + "\n"
+			b = append(b, s...)
+		}
+		return string(b), nil
+
+	case config.JSON:
+		b, _ := json.MarshalIndent(&instances, "", "    ")
+		return string(b), nil
+
+	default:
+		return "", errors.New("Unexpected OutputFormat")
+	}
 }

@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"os/exec"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/ytakahashi/gecco/config"
 )
 
 func Test_Tag_ToString(t *testing.T) {
@@ -245,5 +247,65 @@ func TestGetFilteredInstances2(t *testing.T) {
 	}
 	if str != "" {
 		t.Errorf("str value:\nActual: %v", str)
+	}
+}
+
+func Test_Ec2Instances_ToString1(t *testing.T) {
+	i := Ec2Instance{
+		InstanceID:   "instance1",
+		InstanceType: "type1",
+		Status:       "status1",
+		Tags:         []Tag{{Key: "k", Value: "v"}},
+	}
+	instanceList := Ec2Instances{i}
+
+	expected := "instance1 type1 status1 [{\"k\": \"v\"}]\n"
+
+	actual, err := instanceList.ToString(config.Text)
+	if actual != expected {
+		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
+	}
+
+	if err != nil {
+		t.Errorf("ERR: %v", err)
+	}
+}
+
+func Test_Ec2Instances_ToString2(t *testing.T) {
+	i := Ec2Instance{
+		InstanceID:   "instance1",
+		InstanceType: "type1",
+		Status:       "status1",
+		Tags:         []Tag{{Key: "k", Value: "v"}},
+	}
+	instanceList := Ec2Instances{i}
+
+	b, _ := json.MarshalIndent(&instanceList, "", "    ")
+	expected := string(b)
+
+	actual, err := instanceList.ToString(config.JSON)
+
+	if actual != expected {
+		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
+	}
+
+	if err != nil {
+		t.Errorf("ERR: %v", err)
+	}
+}
+
+func Test_Ec2Instances_ToString3(t *testing.T) {
+	i := Ec2Instance{
+		InstanceID:   "instance1",
+		InstanceType: "type1",
+		Status:       "status1",
+		Tags:         []Tag{{Key: "k", Value: "v"}},
+	}
+	instanceList := Ec2Instances{i}
+
+	_, err := instanceList.ToString(config.Unknown)
+
+	if err == nil {
+		t.Errorf("ERR: %v", err)
 	}
 }

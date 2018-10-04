@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"testing"
 
 	"github.com/ytakahashi/gecco/aws"
 	"github.com/ytakahashi/gecco/config"
+	"github.com/ytakahashi/gecco/ext"
 )
 
 type mockedListCommand1 struct{}
@@ -163,61 +163,18 @@ func Test_ListCommand_RunCommand3(t *testing.T) {
 	}
 }
 
-func Test_PrintInstances1(t *testing.T) {
-	i := aws.Ec2Instance{
-		InstanceID:   "instance1",
-		InstanceType: "type1",
-		Status:       "status1",
-		Tags:         []aws.Tag{{Key: "k", Value: "v"}},
-	}
-	instanceList := aws.Ec2Instances{i}
+type mockedEc2Instance struct{}
 
-	expected := "instance1 type1 status1 [{\"k\": \"v\"}]\n"
-
-	buf := &bytes.Buffer{}
-	err := printInstances(instanceList, buf, config.Text)
-	actual := buf.String()
-	if actual != expected {
-		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
-	}
-
-	if err != nil {
-		t.Errorf("ERR: %v", err)
-	}
+func (instances mockedEc2Instance) GetFilteredInstances(filter ext.ICommand) (selected string, err error) {
+	return
 }
 
-func Test_PrintInstances2(t *testing.T) {
-	i := aws.Ec2Instance{
-		InstanceID:   "instance1",
-		InstanceType: "type1",
-		Status:       "status1",
-		Tags:         []aws.Tag{{Key: "k", Value: "v"}},
-	}
-	instanceList := aws.Ec2Instances{i}
-
-	b, _ := json.MarshalIndent(&instanceList, "", "    ")
-	expected := string(b)
-
-	buf := &bytes.Buffer{}
-	err := printInstances(instanceList, buf, config.JSON)
-	actual := buf.String()
-	if actual != expected {
-		t.Errorf("\nExpected: '%s'\n Actual '%s'", expected, actual)
-	}
-
-	if err != nil {
-		t.Errorf("ERR: %v", err)
-	}
+func (instances mockedEc2Instance) ToString(outputFormat config.OutputFormat) (string, error) {
+	return "", errors.New("")
 }
 
 func Test_PrintInstances3(t *testing.T) {
-	i := aws.Ec2Instance{
-		InstanceID:   "instance1",
-		InstanceType: "type1",
-		Status:       "status1",
-		Tags:         []aws.Tag{{Key: "k", Value: "v"}},
-	}
-	instanceList := aws.Ec2Instances{i}
+	instanceList := mockedEc2Instance{}
 
 	buf := &bytes.Buffer{}
 	err := printInstances(instanceList, buf, config.Unknown)
